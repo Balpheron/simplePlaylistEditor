@@ -24,6 +24,13 @@ namespace PlaylistEditor
 
         bool dragTime;
 
+        CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+        private List<Label> customValuesLabels = new List<Label>();
+        private List<TextBox> customValuesText = new List<TextBox>();
+
+        TreeNode? bufferNode;
+
         public Form1()
         {
             InitializeComponent();
@@ -66,7 +73,14 @@ namespace PlaylistEditor
             toolTip1.SetToolTip(this.newGroupButton, "Добавить элемент");
             toolTip1.SetToolTip(this.OpenListButton, "Открыть плейлист");
             toolTip1.SetToolTip(this.saveButton, "Сохранить плейлист");
-            toolTip1.SetToolTip(this.checkAllButton, "Проверить все каналы");
+            toolTip1.SetToolTip(this.checkAllButton, "Проверить выбранный элемент");
+            toolTip1.SetToolTip(this.stopCheckingButton, "Остановить текущую проверку");
+            toolTip1.SetToolTip(this.copyButton, "Копировать элемент");
+            toolTip1.SetToolTip(this.pasteButton, "Вставить элемент");
+            // считываем конфигурацию и создаем строки под нестандартные параметры
+            Configurator.mainForm = this;
+            Configurator.ReadConfig();
+            CustomValuesUI();
         }
 
         private async void OpenListButton_Click(object sender, EventArgs e)
@@ -145,6 +159,13 @@ namespace PlaylistEditor
             channelLinkText.Text = currentChannel.ChannelPath;
             groupText.Text = currentChannel.GroupName;
             durationText.Text = currentChannel.ChannelDuration;
+            // дополнительные строки
+            customValuesText[^1].Text = currentChannel.additionalData;
+            // строки нестандартных параметров
+            for (int i = 0; i < currentChannel.customData.Length; i++)
+            {
+                customValuesText[i].Text = currentChannel.customData[i];
+            }
             //пытаемся загрузить изображение по ссылке
             try
             {
@@ -260,6 +281,15 @@ namespace PlaylistEditor
         {
             // создаем новый объект с данными
             Channel currentChannel = new Channel(channelLinkText.Text, channelNameText.Text, logoLinkText.Text, groupText.Text, durationText.Text);
+            // дополнительные строки
+            currentChannel.additionalData = customValuesText[^1].Text;
+            // строки нестандартных параметров
+            currentChannel.customData = new string[customValuesText.Count - 1];
+            for (int i = 0; i < currentChannel.customData.Length; i++)
+            {
+                ShowErrorMessage(customValuesText[i].Text);
+                currentChannel.customData[i] = customValuesText[i].Text;
+            }
             int newGroupIndex = -1;
             //выполняем необходимые проверки и получаем индекс группы, если нужен перенос между ними
             try
@@ -402,78 +432,82 @@ namespace PlaylistEditor
             // убеждаемся, что перетаскиваемый и выбранный узел - не одно и то же
             if (!draggedNode.Equals(targetNode) && e.Effect == DragDropEffects.Move)
             {
-                // в зависимости от уровня глубины переносимого нода 
-                switch (draggedNode.Level)
-                {
-                    // плейлист - ничего
-                    case 0: return;
-                    // группа
-                    case 1:
-                        {
-                            // в зависимости от глубины целевого узла
-                            switch (targetNode.Level)
-                            {
-                                // если это не родной плейлист, добавляем в конец этого плейлиста текущую группу
-                                case 0:
-                                    {
-                                        if (targetNode.Index != draggedNode.Parent.Index)
-                                        {
-                                            // перемещенме объектов в коллекции
-                                            playlistManager.MoveElement(playlistManager.playlists[draggedNode.Parent.Index].groupsList[draggedNode.Index], draggedNode.Parent.Index, targetNode.Index);
-                                            MoveNode(ref draggedNode, ref targetNode);
-                                        }
-                                        else return;
-                                        break;
-                                    }
-                                // если это другая группа, то ставим переносимую группа на место целевой группы
-                                case 1:
-                                    {
-                                        // перемещенме объектов в коллекции
-                                        
-                                        SwapNodes(ref draggedNode, ref targetNode, 1);
-                                        break;
-                                    }
-                                default: return;
-                            }
-                            break;
-                        }
-                    // канал
-                    case 2:
-                        {
-                            // в зависимости от глубины целевого узла
-                            switch (targetNode.Level)
-                            {
-                                // если это не родная категория, добавляем в конец этой категории текущий канал
-                                case 1:
-                                    {
-                                        if (targetNode.Index != draggedNode.Parent.Index)
-                                        {
-                                            // перемещенме объектов в коллекции
-                                            playlistManager.MoveElement(draggedNode.Index, (draggedNode.Parent.Parent.Index, draggedNode.Parent.Index), (targetNode.Parent.Index, targetNode.Index));
-                                            MoveNode(ref draggedNode, ref targetNode);
-                                        }
-                                        else return;
-                                        break;
-                                    }
-                                // если это другой канал, то ставим переносимую группа на место целевой группы
-                                case 2:
-                                    {
-                                        // перемещенме объектов в коллекции
-                                        SwapNodes(ref draggedNode, ref targetNode, 2);
-                                        break;
-                                    }
-                                default: return;
-                            }
-                            break;
-                        }
-
-                }
-
+                PasteNode(ref draggedNode, ref targetNode);
                 dragTime = false;
             }
         }
 
-        void SwapNodes(ref TreeNode draggedNode, ref TreeNode targetNode, int level)
+        void PasteNode(ref TreeNode draggedNode, ref TreeNode targetNode)
+        {
+            // в зависимости от уровня глубины переносимого нода 
+            switch (draggedNode.Level)
+            {
+                // плейлист - ничего
+                case 0: return;
+                // группа
+                case 1:
+                    {
+                        // в зависимости от глубины целевого узла
+                        switch (targetNode.Level)
+                        {
+                            // если это не родной плейлист, добавляем в конец этого плейлиста текущую группу
+                            case 0:
+                                {
+                                    if (targetNode.Index != draggedNode.Parent.Index)
+                                    {
+                                        // перемещенме объектов в коллекции
+                                        playlistManager.MoveElement(playlistManager.playlists[draggedNode.Parent.Index].groupsList[draggedNode.Index], draggedNode.Parent.Index, targetNode.Index);
+                                        MoveNode(ref draggedNode, ref targetNode);
+                                    }
+                                    else return;
+                                    break;
+                                }
+                            // если это другая группа, то ставим переносимую группа на место целевой группы
+                            case 1:
+                                {
+                                    // перемещенме объектов в коллекции
+
+                                    SwapNodes(ref draggedNode, ref targetNode, 1);
+                                    break;
+                                }
+                            default: return;
+                        }
+                        break;
+                    }
+                // канал
+                case 2:
+                    {
+                        // в зависимости от глубины целевого узла
+                        switch (targetNode.Level)
+                        {
+                            // если это не родная категория, добавляем в конец этой категории текущий канал
+                            case 1:
+                                {
+                                    if (targetNode.Index != draggedNode.Parent.Index)
+                                    {
+                                        // перемещенме объектов в коллекции
+                                        playlistManager.MoveElement(draggedNode.Index, (draggedNode.Parent.Parent.Index, draggedNode.Parent.Index), (targetNode.Parent.Index, targetNode.Index));
+                                        MoveNode(ref draggedNode, ref targetNode);
+                                    }
+                                    else return;
+                                    break;
+                                }
+                            // если это другой канал, то ставим переносимую группа на место целевой группы
+                            case 2:
+                                {
+                                    // перемещенме объектов в коллекции
+                                    SwapNodes(ref draggedNode, ref targetNode, 2);
+                                    break;
+                                }
+                            default: return;
+                        }
+                        break;
+                    }
+
+            }
+        }
+
+            void SwapNodes(ref TreeNode draggedNode, ref TreeNode targetNode, int level)
         {
             // перемещение узлов
             TreeNode clondeNode = (TreeNode)draggedNode.Clone();
@@ -637,7 +671,7 @@ namespace PlaylistEditor
 
         // проверяем выбранный канал на доступность
         // просто посылаем запрос на указанный адрес, и, если он успешен, считаем канал доступным
-        private void checkButton_Click(object sender, EventArgs e)
+        private async void checkButton_Click(object sender, EventArgs e)
         {
             Channel currentChannel = playlistManager.CurrentPlaylist.CurrentChannel;
             CheckChannel(currentChannel.ChannelPath, true);
@@ -649,15 +683,9 @@ namespace PlaylistEditor
             {
                 // осуществляем запрос и получаем поток
                 using var cts = new CancellationTokenSource();
-                int timeout = 5;
-                int.TryParse(timeoutText.Text, out timeout);
-
-                if (timeout <= 1)
-                {
-                    timeout = 1;
-                    timeoutText.Text = "1";
-                }
-
+                // максимальное время на запрос
+                int timeout = Configurator.currentConfig.CheckTimeoutTime;
+                
                 cts.CancelAfter(TimeSpan.FromSeconds(timeout));
 
                 HttpResponseMessage response = await WebManager.client.GetAsync(checkPath, cts.Token);
@@ -679,45 +707,206 @@ namespace PlaylistEditor
             return true;
         }
 
-        private void checkAllButton_Click(object sender, EventArgs e)
+        // проверка каналов в дереве
+        async Task CheckChannelGlobal(int[] coords)
         {
-            CheckAllChannels();
-        }
-
-        async void CheckAllChannels()
-        {
-            // определяем выбранный плейлист
-            int playlistIndex = 0;
-            if (treeView1.SelectedNode != null)
-                playlistIndex = GetCoordinates(treeView1.SelectedNode)[0];
-            // перебираем все каналы и проверяем доступность
             try
             {
-                for (int i = 0; i < playlistManager.playlists[playlistIndex].groupsList.Count; i++)
-                {
-                    ShowErrorMessage($"{playlistManager.playlists[playlistIndex].groupsList.Count}");
-                    for (int k = 0; k < playlistManager.playlists[playlistIndex].groupsList[i].channelsList.Count; k++)
-                    {
-                        
-                        // текущий канал для проверки временно отмечается серым
-                        treeView1.Nodes[playlistIndex].Nodes[i].Nodes[k].BackColor = Color.Gray;
+               
+                // текущий канал для проверки временно отмечается серым
+                treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Gray;
 
-                        bool status;
-                        var processor = CheckChannel(playlistManager.playlists[playlistIndex].groupsList[i].channelsList[k].ChannelPath, false);
-                        status = await processor;
-                        // перекрашиваем в нужный цвет в зависимости от результата
-                        if (status)
-                            treeView1.Nodes[playlistIndex].Nodes[i].Nodes[k].BackColor = Color.Green;
-                        else treeView1.Nodes[playlistIndex].Nodes[i].Nodes[k].BackColor = Color.Red;
-                    }
-                }
+                bool status;
+                var processor = CheckChannel(playlistManager.playlists[coords[0]].groupsList[coords[1]].channelsList[coords[2]].ChannelPath, false);
+                status = await processor;
+                // перекрашиваем в нужный цвет в зависимости от результата
+                if (status)
+                    treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Green;
+                else treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Red;
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                ShowErrorMessage(ex.Message);
+                ShowErrorMessage(e.Message);
+            }
+            
+        }
+
+        private async void checkAllButton_Click(object sender, EventArgs e)
+        {
+            // останавливаем идущий процесс
+            StopChecking();
+            CancellationToken token = cancelTokenSource.Token;
+            var processor = CheckAllChannels(token);
+            await processor;
+        }
+
+        void StopChecking()
+        {
+            cancelTokenSource.Cancel();
+            cancelTokenSource.Dispose();
+            cancelTokenSource = new CancellationTokenSource();
+        }
+
+        async Task CheckAllChannels(CancellationToken token)
+        {
+            // определяем объект для проверки
+            int[] checkCoords;
+            if (treeView1.SelectedNode != null)
+                checkCoords = GetCoordinates(treeView1.SelectedNode);
+            // если никакой узел не выбран, проверяем первый плейлист по списку
+            else checkCoords = new int[] { 0 };
+            
+            // проверяем выделенные объекты
+            switch (checkCoords.Length)
+            {
+                // канал
+                case 3:
+                    var processor = CheckChannelGlobal(checkCoords);
+                    
+                    await processor;
+                    break;
+                // группу каналов
+                case 2:
+                    for (int k = 0; k < playlistManager.playlists[checkCoords[0]].groupsList[checkCoords[1]].channelsList.Count; k++)
+                    {
+                        if (token.IsCancellationRequested)
+                        {
+                            ShowErrorMessage("Проверка остановлена");
+                            return;
+                        }
+
+                        processor = CheckChannelGlobal(new int[] {checkCoords[0], checkCoords[1], k});
+                        await processor;
+                    }
+                    break;
+                // весь плейлист
+                case 1:
+                    for (int i = 0; i < playlistManager.playlists[checkCoords[0]].groupsList.Count; i++)
+                    {
+                        for (int k = 0; k < playlistManager.playlists[checkCoords[0]].groupsList[i].channelsList.Count; k++)
+                        {
+                            if (token.IsCancellationRequested)
+                            {
+                                ShowErrorMessage("Проверка остановлена");
+                                return;
+                            }
+
+                            processor = CheckChannelGlobal(new int[] { checkCoords[0], i, k });
+                            await processor;
+                        }
+                    }
+                    break;
+            }
+            // проверяем доступность выбранного объекта
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            StopChecking();
+        }
+
+        private void settingsButton_Click(object sender, EventArgs e)
+        {
+            SettingsForm settingsForm = new SettingsForm(this);
+            settingsForm.Show();
+        }
+
+        internal void CustomValuesUI()
+        {
+            // удаляем старые элементы
+            foreach (var item in customValuesLabels)
+            {
+                channelGroup.Controls.Remove(item);
             }
 
+            foreach (var item in customValuesText)
+            {
+                channelGroup.Controls.Remove(item);
+            }
+
+            int verticalPosition = 280;
+
+            // добавляем новые элементы
+            TextBox curText;
+            Label curLabel;
+            foreach (var item in Configurator.currentConfig.customValues)
+            {
+                // сначала текстовое поле
+                curText = new TextBox();
+                curText.Size = new Size(368, 23);
+                curText.Location = new Point(162, verticalPosition);
+                curText.Anchor = (AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Top);
+                customValuesText.Add(curText);
+                channelGroup.Controls.Add(customValuesText[^1]);
+                // название параметра
+                curLabel = new Label();
+                curLabel.Location = new Point(28, verticalPosition);
+                curLabel.Text = item.Key;
+                customValuesLabels.Add(curLabel);
+                channelGroup.Controls.Add(customValuesLabels[^1]);
+                
+                verticalPosition += 30;
+            }
+
+            // добавляем отдельные параметр, описывающий дополнительные строки
+            // сначала текстовое поле
+            curText = new TextBox();
+            curText.Size = new Size(368, 46);
+            curText.Location = new Point(162, verticalPosition);
+            curText.Multiline = true;
+            curText.Anchor = (AnchorStyles.Right | AnchorStyles.Left | AnchorStyles.Top);
+            customValuesText.Add(curText);
+            channelGroup.Controls.Add(customValuesText[^1]);
+            // название параметра
+            curLabel = new Label();
+            curLabel.Location = new Point(28, verticalPosition);
+            curLabel.Text = "Дополнительно";
+            customValuesLabels.Add(curLabel);
+            channelGroup.Controls.Add(customValuesLabels[^1]);
+
+            foreach (Control ctrl in customValuesText)
+            {
+                
+                    ctrl.KeyDown += TextChangedChecker;
+                
+            }
+        }
+
+        private void copyButton_Click(object sender, EventArgs e)
+        {
+            CopyNode();
+        }
+
+        public void CopyNode()
+        {
+            // кнопка вставки становится активной
+            pasteButton.Enabled = true;
+            if (treeView1.SelectedNode.Level != 0)
+                bufferNode = treeView1.SelectedNode;
+        }
+
+        private void pasteButton_Click(object sender, EventArgs e)
+        {
+           PasteCopiedNode();
+        }
+
+        public void PasteCopiedNode()
+        {
+            if (bufferNode == null)
+                return;
+
+            if (treeView1.SelectedNode == null)
+                return;
             
+            int[] coords = GetCoordinates(bufferNode);
+            TreeNode clone = (TreeNode)bufferNode.Clone();
+
+            // в случае, если уровень копированного узла равен выделенному, добавляем копированный узел в родителя выделенного
+            if (bufferNode.Level == treeView1.SelectedNode.Level)
+            {
+                treeView1.SelectedNode.Parent.Nodes.Add(clone);
+            }
         }
     }
 

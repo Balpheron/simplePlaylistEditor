@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
+      "projectUniqueName": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
       "projectName": "PlaylistEditor",
-      "projectPath": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
+      "projectPath": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
       "packagesPath": "C:\\Users\\tupoi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\obj\\",
+      "outputPath": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\tupoi\\AppData\\Roaming\\NuGet\\NuGet.Config",

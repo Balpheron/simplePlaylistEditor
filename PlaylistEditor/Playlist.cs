@@ -95,5 +95,6 @@ namespace PlaylistEditor
             groupsList[currentGroupIndex].channelsList.RemoveAt(currentChannelIndex);
             groupsList[endingPosition.group].channelsList.Add(tempChannel);
         }
+
     }
 }

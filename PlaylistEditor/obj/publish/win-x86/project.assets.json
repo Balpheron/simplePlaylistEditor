@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
+      "projectUniqueName": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
       "projectName": "PlaylistEditor",
-      "projectPath": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
+      "projectPath": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
       "packagesPath": "C:\\Users\\tupoi\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\obj\\publish\\win-x86\\",
+      "outputPath": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\obj\\publish\\win-x86\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\tupoi\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -56,20 +56,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Runtime.win-x86",
-            "version": "[6.0.2, 6.0.2]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Runtime.win-x86",
-            "version": "[6.0.2, 6.0.2]"
-          },
-          {
-            "name": "Microsoft.WindowsDesktop.App.Runtime.win-x86",
-            "version": "[6.0.2, 6.0.2]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"

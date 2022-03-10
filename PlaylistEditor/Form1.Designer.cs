@@ -56,7 +56,10 @@
             this.saveButton = new System.Windows.Forms.Button();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.checkAllButton = new System.Windows.Forms.Button();
-            this.timeoutText = new System.Windows.Forms.TextBox();
+            this.stopCheckingButton = new System.Windows.Forms.Button();
+            this.settingsButton = new System.Windows.Forms.Button();
+            this.pasteButton = new System.Windows.Forms.Button();
+            this.copyButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.logoPicture)).BeginInit();
             this.channelGroup.SuspendLayout();
             this.SuspendLayout();
@@ -75,9 +78,12 @@
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
             this.openFileDialog1.Filter = "Txt files|*.txt|m3u files|*.m3u";
+            this.openFileDialog1.FilterIndex = 2;
             // 
             // textBox1
             // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox1.Location = new System.Drawing.Point(24, 493);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
@@ -87,6 +93,8 @@
             // treeView1
             // 
             this.treeView1.AllowDrop = true;
+            this.treeView1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.treeView1.HideSelection = false;
             this.treeView1.LabelEdit = true;
             this.treeView1.Location = new System.Drawing.Point(24, 58);
@@ -113,6 +121,8 @@
             // 
             // channelNameText
             // 
+            this.channelNameText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.channelNameText.Location = new System.Drawing.Point(162, 43);
             this.channelNameText.Name = "channelNameText";
             this.channelNameText.Size = new System.Drawing.Size(368, 23);
@@ -120,6 +130,8 @@
             // 
             // logoLinkText
             // 
+            this.logoLinkText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.logoLinkText.Location = new System.Drawing.Point(162, 93);
             this.logoLinkText.Name = "logoLinkText";
             this.logoLinkText.Size = new System.Drawing.Size(338, 23);
@@ -127,6 +139,8 @@
             // 
             // channelLinkText
             // 
+            this.channelLinkText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.channelLinkText.Location = new System.Drawing.Point(162, 200);
             this.channelLinkText.Name = "channelLinkText";
             this.channelLinkText.Size = new System.Drawing.Size(368, 23);
@@ -143,6 +157,8 @@
             // 
             // channelNameHeader
             // 
+            this.channelNameHeader.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.channelNameHeader.Location = new System.Drawing.Point(165, 17);
             this.channelNameHeader.Name = "channelNameHeader";
             this.channelNameHeader.Size = new System.Drawing.Size(365, 23);
@@ -152,6 +168,8 @@
             // 
             // logoLinkHeader
             // 
+            this.logoLinkHeader.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.logoLinkHeader.Location = new System.Drawing.Point(162, 67);
             this.logoLinkHeader.Name = "logoLinkHeader";
             this.logoLinkHeader.Size = new System.Drawing.Size(365, 23);
@@ -161,6 +179,8 @@
             // 
             // channeLinkHeader
             // 
+            this.channeLinkHeader.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.channeLinkHeader.Location = new System.Drawing.Point(162, 174);
             this.channeLinkHeader.Name = "channeLinkHeader";
             this.channeLinkHeader.Size = new System.Drawing.Size(368, 23);
@@ -170,6 +190,8 @@
             // 
             // groupHeader
             // 
+            this.groupHeader.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupHeader.Location = new System.Drawing.Point(165, 117);
             this.groupHeader.Name = "groupHeader";
             this.groupHeader.Size = new System.Drawing.Size(365, 23);
@@ -179,6 +201,8 @@
             // 
             // groupText
             // 
+            this.groupText.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupText.Location = new System.Drawing.Point(162, 143);
             this.groupText.Name = "groupText";
             this.groupText.Size = new System.Drawing.Size(368, 23);
@@ -203,6 +227,10 @@
             // 
             // channelGroup
             // 
+            this.channelGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.channelGroup.AutoSize = true;
             this.channelGroup.Controls.Add(this.checkButton);
             this.channelGroup.Controls.Add(this.reloadLogo);
             this.channelGroup.Controls.Add(this.saveChannel);
@@ -218,9 +246,9 @@
             this.channelGroup.Controls.Add(this.channeLinkHeader);
             this.channelGroup.Controls.Add(this.logoHeader);
             this.channelGroup.Controls.Add(this.logoLinkHeader);
-            this.channelGroup.Location = new System.Drawing.Point(237, 41);
+            this.channelGroup.Location = new System.Drawing.Point(237, 58);
             this.channelGroup.Name = "channelGroup";
-            this.channelGroup.Size = new System.Drawing.Size(536, 406);
+            this.channelGroup.Size = new System.Drawing.Size(536, 389);
             this.channelGroup.TabIndex = 15;
             this.channelGroup.TabStop = false;
             this.channelGroup.Text = "Информация о канале";
@@ -238,6 +266,7 @@
             // 
             // reloadLogo
             // 
+            this.reloadLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.reloadLogo.Image = ((System.Drawing.Image)(resources.GetObject("reloadLogo.Image")));
             this.reloadLogo.Location = new System.Drawing.Point(506, 91);
             this.reloadLogo.Name = "reloadLogo";
@@ -248,6 +277,7 @@
             // 
             // saveChannel
             // 
+            this.saveChannel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.saveChannel.Enabled = false;
             this.saveChannel.Location = new System.Drawing.Point(353, 240);
             this.saveChannel.Name = "saveChannel";
@@ -260,7 +290,7 @@
             // deleteButton
             // 
             this.deleteButton.Image = global::PlaylistEditor.Properties.Resources.Delete;
-            this.deleteButton.Location = new System.Drawing.Point(54, 453);
+            this.deleteButton.Location = new System.Drawing.Point(207, 28);
             this.deleteButton.Name = "deleteButton";
             this.deleteButton.Size = new System.Drawing.Size(24, 24);
             this.deleteButton.TabIndex = 16;
@@ -274,7 +304,7 @@
             // newGroupButton
             // 
             this.newGroupButton.Image = global::PlaylistEditor.Properties.Resources.NewDocument;
-            this.newGroupButton.Location = new System.Drawing.Point(24, 453);
+            this.newGroupButton.Location = new System.Drawing.Point(177, 28);
             this.newGroupButton.Name = "newGroupButton";
             this.newGroupButton.Size = new System.Drawing.Size(24, 24);
             this.newGroupButton.TabIndex = 17;
@@ -298,29 +328,65 @@
             // checkAllButton
             // 
             this.checkAllButton.Image = global::PlaylistEditor.Properties.Resources.DownloadDocument;
-            this.checkAllButton.Location = new System.Drawing.Point(207, 453);
+            this.checkAllButton.Location = new System.Drawing.Point(720, 28);
             this.checkAllButton.Name = "checkAllButton";
             this.checkAllButton.Size = new System.Drawing.Size(24, 24);
             this.checkAllButton.TabIndex = 19;
             this.checkAllButton.UseVisualStyleBackColor = true;
             this.checkAllButton.Click += new System.EventHandler(this.checkAllButton_Click);
             // 
-            // timeoutText
+            // stopCheckingButton
             // 
-            this.timeoutText.Location = new System.Drawing.Point(163, 454);
-            this.timeoutText.MaxLength = 2;
-            this.timeoutText.Name = "timeoutText";
-            this.timeoutText.Size = new System.Drawing.Size(38, 23);
-            this.timeoutText.TabIndex = 20;
-            this.timeoutText.Text = "5";
-            this.timeoutText.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.stopCheckingButton.Image = global::PlaylistEditor.Properties.Resources.StopOutline;
+            this.stopCheckingButton.Location = new System.Drawing.Point(690, 28);
+            this.stopCheckingButton.Name = "stopCheckingButton";
+            this.stopCheckingButton.Size = new System.Drawing.Size(24, 24);
+            this.stopCheckingButton.TabIndex = 21;
+            this.stopCheckingButton.UseVisualStyleBackColor = true;
+            this.stopCheckingButton.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // settingsButton
+            // 
+            this.settingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.settingsButton.Image = global::PlaylistEditor.Properties.Resources.Settings;
+            this.settingsButton.Location = new System.Drawing.Point(750, 28);
+            this.settingsButton.Name = "settingsButton";
+            this.settingsButton.Size = new System.Drawing.Size(24, 24);
+            this.settingsButton.TabIndex = 22;
+            this.settingsButton.UseVisualStyleBackColor = true;
+            this.settingsButton.Click += new System.EventHandler(this.settingsButton_Click);
+            // 
+            // pasteButton
+            // 
+            this.pasteButton.Enabled = false;
+            this.pasteButton.Image = global::PlaylistEditor.Properties.Resources.Paste;
+            this.pasteButton.Location = new System.Drawing.Point(147, 28);
+            this.pasteButton.Name = "pasteButton";
+            this.pasteButton.Size = new System.Drawing.Size(24, 24);
+            this.pasteButton.TabIndex = 23;
+            this.pasteButton.UseVisualStyleBackColor = true;
+            this.pasteButton.Click += new System.EventHandler(this.pasteButton_Click);
+            // 
+            // copyButton
+            // 
+            this.copyButton.Enabled = false;
+            this.copyButton.Image = global::PlaylistEditor.Properties.Resources.Copy;
+            this.copyButton.Location = new System.Drawing.Point(117, 28);
+            this.copyButton.Name = "copyButton";
+            this.copyButton.Size = new System.Drawing.Size(24, 24);
+            this.copyButton.TabIndex = 24;
+            this.copyButton.UseVisualStyleBackColor = true;
+            this.copyButton.Click += new System.EventHandler(this.copyButton_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(786, 559);
-            this.Controls.Add(this.timeoutText);
+            this.Controls.Add(this.copyButton);
+            this.Controls.Add(this.pasteButton);
+            this.Controls.Add(this.settingsButton);
+            this.Controls.Add(this.stopCheckingButton);
             this.Controls.Add(this.checkAllButton);
             this.Controls.Add(this.saveButton);
             this.Controls.Add(this.newGroupButton);
@@ -369,6 +435,9 @@
         private SaveFileDialog saveFileDialog1;
         private Button checkButton;
         private Button checkAllButton;
-        private TextBox timeoutText;
+        private Button stopCheckingButton;
+        private Button settingsButton;
+        private Button pasteButton;
+        private Button copyButton;
     }
 }

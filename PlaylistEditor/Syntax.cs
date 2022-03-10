@@ -14,6 +14,7 @@ namespace PlaylistEditor
         public static readonly string channelHeader = "#EXTINF:"; //тег для заголовка канала или трека
         public static readonly string logoTag = "tvg-logo="; //тег для логотипа
         public static readonly string groupTag = "group-title="; //тег для названия группы каналов
+        public static readonly string altGroupTag = "#EXTGRP:"; // альтернативный тег группы каналов
         public const string defaultGroupName = "Новая категория";
         public const string newChannelName = "Новый канал";
         public static string GetStringBetween(string sourceString, string replaceTag)

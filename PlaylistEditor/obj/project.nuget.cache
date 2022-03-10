@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ynFFtWXmkDwB25/e3yy9fLidt4X0aJtef+D2rdalYYoQ6pdMrBhSHJExEkPeFek3KlpaTV5wI6N0pFeXGamp6Q==",
+  "dgSpecHash": "JhAUbRbKqjd0r1ajTGAfmAxn603WB9YoDlJSQHNb+I/0UAMwSWs2cgSMhtKQ9GUUc80uTtLuj34ZZcAijv3LZg==",
   "success": true,
-  "projectFilePath": "C:\\Users\\tupoi\\source\\repos\\PlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
+  "projectFilePath": "C:\\playRepo\\simplePlaylistEditor\\PlaylistEditor\\PlaylistEditor.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

@@ -22,6 +22,7 @@ namespace PlaylistEditor
         public string ChannelDuration { get { if (channelDuration == -1 || channelDuration == 0) return "Трансляция"; return channelDuration.ToString(); } set { if(!int.TryParse(value, out channelDuration)) channelDuration = -1; } }
         
         public string[] customData = new string[1];
+        public string additionalData = "";
 
         public delegate string ChannelInfoComposer(); // делегат для компоновки возвращаемой строки из данных о канале
 
@@ -64,17 +65,24 @@ namespace PlaylistEditor
         {
             // заголовок и длительность трека/трансляция
             string channelInfo = $@"{Syntax.channelHeader}{channelDuration} ";
-            // логотип
+            // логотип, если он есть
+            if (logoPath != "")
             channelInfo += $@"{Syntax.logoTag}""{LogoPath}""";
             // категория
             channelInfo += $@"{Syntax.groupTag}""{GroupName}""";
-            // дополнительные параметры, идущие в одной строке до названия канала
-            foreach (var item in customData)
+            // дополнительные параметры, идущие в одной строке до названия канала, если они не пустые
+            int ndx = 0;
+            foreach (var item in Configurator.currentConfig.customValues)
             {
-
+                if (customData[ndx].Length != null && customData[ndx] != "")
+                channelInfo += $@"{item.Value}=""{customData[ndx]}""";
+                ndx++;
             }
             // название канала
             channelInfo += $",{Name}\n";
+            // дополнительные строки
+            if (additionalData != "")
+                channelInfo += $"{additionalData}\n";
             // на следующей строке располагается ссылка на контент
             channelInfo += $"{ChannelPath}\n";
             return channelInfo;

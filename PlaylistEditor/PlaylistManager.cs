@@ -50,18 +50,26 @@ namespace PlaylistEditor
                 OnError?.Invoke("No m3u header exists");
                 playlist.Header = Syntax.listHeader;
             }
-            //разбиваем файл на строки, соответствующие одному каналу
+            // разбиваем файл на строки, соответствующие одному каналу
             
             string[] channelsInfoString = rawContent.Split(Syntax.channelHeader, StringSplitOptions.RemoveEmptyEntries);
 
-            //перебираем полученный массив
+            // создаем массив нестандартных параметров
+            string[] customTags = new string[Configurator.currentConfig.customValues.Count];
+            int ndx = 0;
+            foreach (var item in Configurator.currentConfig.customValues)
+            {
+                customTags[ndx++] = item.Value;
+            }
+
+            // перебираем полученный массив
             Channel tempChannel;
             for (int i = 0; i < channelsInfoString.Length; i++)
             {
                 if (channelsInfoString[i].Length < 4)
                     continue;
 
-                tempChannel = GenerateChannel(channelsInfoString[i]);
+                tempChannel = GenerateChannel(channelsInfoString[i], customTags);
                 int groupIndex = playlist.FindGroup(tempChannel.GroupName, true); //ищем нужную категорию
                 playlist.groupsList[groupIndex].channelsList.Add(tempChannel); //добавляем канал в эту категорию
 
@@ -79,16 +87,43 @@ namespace PlaylistEditor
         {
             //удаляем пустые строки
             rawData = Regex.Replace(rawData, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
+            // находим параметры, для которых выделяются отдельные строки
+            // в первую очередь, пренадлежность канала к какой-либо группе
+            string groupName = "";
+            string currentPattern = Syntax.altGroupTag + @".*";
+            Regex regex = new Regex(currentPattern);
+            try
+            {
+                rawData = regex.Replace(rawData, m => { groupName = m.Value; return ""; }, 1);
+                groupName = groupName.Replace(Syntax.altGroupTag, "");
+            }
+            catch (Exception e)
+            {
+                groupName = "";
+                OnError?.Invoke(e.Message);
+            }
+            // оставшиеся параметры
+
             //разбиваем полученную строку на подстроки; при этом последняя подстрока здесь явлется путем к треку или ссылкой на поток
             string[] subStrings = rawData.Split("\n", StringSplitOptions.RemoveEmptyEntries);
             //разбиваем заглавную строку на подстроки по символу ",", чтобы вычленить названия канала или трека
             //при этом заголовком всегда будет последняя подстрока
             string[] headerSubStrings = subStrings[0].Split(',');
             string channelName = headerSubStrings[^1];
+
+            // если для одного канал строк больше, чем 2 (не считая отдельную строку для группы), записываем эти строки
+            string additionalString = "";
+            if (subStrings.Length > 2)
+            {
+                for (int i = 1; i < subStrings.Length - 1; i++)
+                {
+                    additionalString += subStrings[i];
+                }
+            }
             //получаем информацию из оставшейся подстроки заглавной строки о:
             //длительность трека - первые несколько цифр с возможным знаком '-' перед значением
-            string currentPattern = @".\d*";
-            Regex regex = new Regex(currentPattern);
+            currentPattern = @".\d*";
+            regex = new Regex(currentPattern);
             string trackDuration = "-1";
             try
             {
@@ -109,18 +144,19 @@ namespace PlaylistEditor
             {
                 //OnError?.Invoke(e.Message);
             }
-            //категорию канала; аналогично логотипу
-            string groupName = "";
-            try
+            //категорию канала, если она не была определена до этого момента; аналогично логотипу
+            if (groupName == "")
             {
-                regex = new Regex(Syntax.groupTag + "\"[^\"]+\"");
-                groupName = Syntax.GetStringBetween(regex.Match(headerSubStrings[0]).Value, Syntax.groupTag);
+                try
+                {
+                    regex = new Regex(Syntax.groupTag + "\"[^\"]+\"");
+                    groupName = Syntax.GetStringBetween(regex.Match(headerSubStrings[0]).Value, Syntax.groupTag);
+                }
+                catch (Exception e)
+                {
+                    //OnError?.Invoke(e.Message);
+                }
             }
-            catch (Exception e)
-            {
-                //OnError?.Invoke(e.Message);
-            }
-
             //создаем канал с полученными данными
             Channel result = new Channel(subStrings[^1], channelName, logoPath, groupName, trackDuration);
 
@@ -131,11 +167,14 @@ namespace PlaylistEditor
 
                 for (int i = 0; i < customTags.Length; i++)
                 {
-                    regex = new Regex(customTags[i] + "\"[^\"]+\"");
-                    logoPath = Syntax.GetStringBetween(regex.Match(headerSubStrings[0]).Value, customTags[i]);
+                    regex = new Regex(customTags[i] + "=" + "\"[^\"]+\"");
+                    logoPath = Syntax.GetStringBetween(regex.Match(headerSubStrings[0]).Value, customTags[i] + "=");
+                    result.customData[i] = logoPath;
                 }
             }
 
+            
+            result.additionalData = additionalString;
             
             return result;
         }
@@ -239,6 +278,18 @@ namespace PlaylistEditor
             }
 
             return result;
+        }
+
+        // получаем объект по заданным координатам в древе
+        public object? GetObject(int[] coordinates)
+        {
+            switch (coordinates.Length)
+            {
+                case 0: return playlists[coordinates[0]];
+                case 1: return playlists[coordinates[0]].groupsList[coordinates[1]];
+                case 2: return playlists[coordinates[0]].groupsList[coordinates[1]].channelsList[coordinates[2]];
+                default: return null;
+            }
         }
     }
 
