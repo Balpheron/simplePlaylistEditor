@@ -1,5 +1,0 @@
-C:\Users\tupoi\Desktop\builds\Новая папка\PlaylistEditor.exe
-C:\Users\tupoi\Desktop\builds\Новая папка\PlaylistEditor.dll
-C:\Users\tupoi\Desktop\builds\Новая папка\PlaylistEditor.deps.json
-C:\Users\tupoi\Desktop\builds\Новая папка\PlaylistEditor.runtimeconfig.json
-C:\Users\tupoi\Desktop\builds\Новая папка\PlaylistEditor.pdb
