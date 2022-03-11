@@ -432,12 +432,12 @@ namespace PlaylistEditor
             // убеждаемся, что перетаскиваемый и выбранный узел - не одно и то же
             if (!draggedNode.Equals(targetNode) && e.Effect == DragDropEffects.Move)
             {
-                PasteNode(ref draggedNode, ref targetNode);
+                PasteNode(ref draggedNode, ref targetNode, true);
                 dragTime = false;
             }
         }
 
-        void PasteNode(ref TreeNode draggedNode, ref TreeNode targetNode)
+        void PasteNode(ref TreeNode draggedNode, ref TreeNode targetNode, bool removeDragged)
         {
             // в зависимости от уровня глубины переносимого нода 
             switch (draggedNode.Level)
@@ -453,11 +453,11 @@ namespace PlaylistEditor
                             // если это не родной плейлист, добавляем в конец этого плейлиста текущую группу
                             case 0:
                                 {
-                                    if (targetNode.Index != draggedNode.Parent.Index)
+                                    if (targetNode.Index != draggedNode.Parent.Index || !removeDragged)
                                     {
                                         // перемещенме объектов в коллекции
-                                        playlistManager.MoveElement(playlistManager.playlists[draggedNode.Parent.Index].groupsList[draggedNode.Index], draggedNode.Parent.Index, targetNode.Index);
-                                        MoveNode(ref draggedNode, ref targetNode);
+                                        playlistManager.MoveElement(draggedNode.Index, draggedNode.Parent.Index, targetNode.Index, removeDragged);
+                                        MoveNode(ref draggedNode, ref targetNode, removeDragged);
                                     }
                                     else return;
                                     break;
@@ -467,7 +467,7 @@ namespace PlaylistEditor
                                 {
                                     // перемещенме объектов в коллекции
 
-                                    SwapNodes(ref draggedNode, ref targetNode, 1);
+                                    SwapNodes(ref draggedNode, ref targetNode, 1, removeDragged);
                                     break;
                                 }
                             default: return;
@@ -483,11 +483,11 @@ namespace PlaylistEditor
                             // если это не родная категория, добавляем в конец этой категории текущий канал
                             case 1:
                                 {
-                                    if (targetNode.Index != draggedNode.Parent.Index)
+                                    if (targetNode.Index != draggedNode.Parent.Index || !removeDragged)
                                     {
                                         // перемещенме объектов в коллекции
-                                        playlistManager.MoveElement(draggedNode.Index, (draggedNode.Parent.Parent.Index, draggedNode.Parent.Index), (targetNode.Parent.Index, targetNode.Index));
-                                        MoveNode(ref draggedNode, ref targetNode);
+                                        playlistManager.MoveElement(draggedNode.Index, (draggedNode.Parent.Parent.Index, draggedNode.Parent.Index), (targetNode.Parent.Index, targetNode.Index), removeDragged);
+                                        MoveNode(ref draggedNode, ref targetNode, removeDragged);
                                     }
                                     else return;
                                     break;
@@ -496,7 +496,7 @@ namespace PlaylistEditor
                             case 2:
                                 {
                                     // перемещенме объектов в коллекции
-                                    SwapNodes(ref draggedNode, ref targetNode, 2);
+                                    SwapNodes(ref draggedNode, ref targetNode, 2, removeDragged);
                                     break;
                                 }
                             default: return;
@@ -507,7 +507,7 @@ namespace PlaylistEditor
             }
         }
 
-            void SwapNodes(ref TreeNode draggedNode, ref TreeNode targetNode, int level)
+            void SwapNodes(ref TreeNode draggedNode, ref TreeNode targetNode, int level, bool removeDragged)
         {
             // перемещение узлов
             TreeNode clondeNode = (TreeNode)draggedNode.Clone();
@@ -518,23 +518,32 @@ namespace PlaylistEditor
             // если сверху, то перестаскиваемый узел становится снизу выделенного
             else targetNode.Parent.Nodes.Insert(targetNode.Index + 1, clondeNode);
             //удаляем перетаскиваемый узел и выделяем вставленную копию
+            if (removeDragged)
             draggedNode.Remove();
 
-            treeView1.SelectedNode = clondeNode;
-            int[] newNode = GetCoordinates(treeView1.SelectedNode);
-
-            // ShowErrorMessage($"{oldNode[0]} {oldNode[1]} {oldNode[2]} : {newNode[0]} {newNode[1]} {newNode[2]}");
+            
+            int[] newNode = GetCoordinates(clondeNode);
 
             if (level == 2)
-            playlistManager.MoveElement(oldNode, newNode);
-            else playlistManager.MoveElement(true, oldNode, newNode);
+            playlistManager.MoveElement(oldNode, newNode, removeDragged);
+            else playlistManager.MoveElement(true, oldNode, newNode, removeDragged);
+            treeView1.SelectedNode = clondeNode;
         }
 
-        void MoveNode(ref TreeNode draggedNode, ref TreeNode targetNode) 
+        void MoveNode(ref TreeNode draggedNode, ref TreeNode targetNode, bool removeDragged) 
         {
             // перемещение узлов
-            draggedNode.Remove();
-            targetNode.Nodes.Add(draggedNode);
+            // если нужно, то удаляем исходный узел для перемещения
+            if (removeDragged)
+            {
+                draggedNode.Remove();
+                targetNode.Nodes.Add(draggedNode);
+            }
+            else
+            {
+                TreeNode clone = (TreeNode)draggedNode.Clone();
+                targetNode.Nodes.Add(clone);
+            }
         }
 
         // удаляем выбранный узел и информацию о нем
@@ -880,6 +889,8 @@ namespace PlaylistEditor
 
         public void CopyNode()
         {
+            if (treeView1.SelectedNode == null)
+                return;
             // кнопка вставки становится активной
             pasteButton.Enabled = true;
             if (treeView1.SelectedNode.Level != 0)
@@ -898,14 +909,13 @@ namespace PlaylistEditor
 
             if (treeView1.SelectedNode == null)
                 return;
-            
-            int[] coords = GetCoordinates(bufferNode);
-            TreeNode clone = (TreeNode)bufferNode.Clone();
 
-            // в случае, если уровень копированного узла равен выделенному, добавляем копированный узел в родителя выделенного
-            if (bufferNode.Level == treeView1.SelectedNode.Level)
+            TreeNode seleceted = treeView1.SelectedNode;
+            PasteNode(ref bufferNode, ref seleceted, false);
+
+            for (int i = 0; i < playlistManager.CurrentPlaylist.groupsList.Count; i++)
             {
-                treeView1.SelectedNode.Parent.Nodes.Add(clone);
+                ShowErrorMessage($"{playlistManager.CurrentPlaylist.groupsList[i].Name} ");
             }
         }
     }

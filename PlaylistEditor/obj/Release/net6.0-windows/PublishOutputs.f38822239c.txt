@@ -1,0 +1,5 @@
+C:\Users\tupoi\Desktop\c\PlaylistEditor.exe
+C:\Users\tupoi\Desktop\c\PlaylistEditor.dll
+C:\Users\tupoi\Desktop\c\PlaylistEditor.deps.json
+C:\Users\tupoi\Desktop\c\PlaylistEditor.runtimeconfig.json
+C:\Users\tupoi\Desktop\c\PlaylistEditor.pdb

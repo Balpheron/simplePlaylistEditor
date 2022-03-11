@@ -87,5 +87,19 @@ namespace PlaylistEditor
             channelInfo += $"{ChannelPath}\n";
             return channelInfo;
         }
+
+        public Channel Clone()
+        {
+            Channel channel = new Channel();
+            channel.Name = Name;
+            channel.channelDuration = channelDuration;
+            channel.channelPath = channelPath;
+            channel.logoPath = logoPath;
+            channel.channelDuration = channelDuration;
+            channel.groupName = groupName;
+            channel.additionalData = additionalData;
+            channel.customData = customData;
+            return channel;
+        }
     }
 }

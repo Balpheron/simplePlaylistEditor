@@ -1,0 +1,7 @@
+C:\Users\tupoi\Desktop\c\PlaylistEditor.pdb
+C:\Users\tupoi\Desktop\c\D3DCompiler_47_cor3.dll
+C:\Users\tupoi\Desktop\c\PenImc_cor3.dll
+C:\Users\tupoi\Desktop\c\PresentationNative_cor3.dll
+C:\Users\tupoi\Desktop\c\vcruntime140_cor3.dll
+C:\Users\tupoi\Desktop\c\wpfgfx_cor3.dll
+C:\Users\tupoi\Desktop\c\PlaylistEditor.exe

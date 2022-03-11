@@ -327,6 +327,7 @@
             // 
             // checkAllButton
             // 
+            this.checkAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkAllButton.Image = global::PlaylistEditor.Properties.Resources.DownloadDocument;
             this.checkAllButton.Location = new System.Drawing.Point(720, 28);
             this.checkAllButton.Name = "checkAllButton";
@@ -337,6 +338,7 @@
             // 
             // stopCheckingButton
             // 
+            this.stopCheckingButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.stopCheckingButton.Image = global::PlaylistEditor.Properties.Resources.StopOutline;
             this.stopCheckingButton.Location = new System.Drawing.Point(690, 28);
             this.stopCheckingButton.Name = "stopCheckingButton";
@@ -369,7 +371,6 @@
             // 
             // copyButton
             // 
-            this.copyButton.Enabled = false;
             this.copyButton.Image = global::PlaylistEditor.Properties.Resources.Copy;
             this.copyButton.Location = new System.Drawing.Point(117, 28);
             this.copyButton.Name = "copyButton";

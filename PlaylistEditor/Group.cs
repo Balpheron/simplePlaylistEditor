@@ -30,5 +30,17 @@ namespace PlaylistEditor
             if (other == null) return false;
             return (other.Name == this.Name);
         }
+
+        public Group Clone()
+        {
+            Group group = new Group();
+            group.Name = Name;
+            group.channelsList = new List<Channel>();
+            for (int i = 0; i < channelsList.Count; i++)
+            {
+                group.channelsList.Add(channelsList[i].Clone());
+            }
+            return group;
+        }
     }
 }

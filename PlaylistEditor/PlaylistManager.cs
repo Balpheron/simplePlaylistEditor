@@ -181,35 +181,39 @@ namespace PlaylistEditor
 
         // переносим группу из одного плейлиста в другой
         // (группа для переноса, индекс плейлиста-источника переноса, индекс плейлиста-цели переноса)
-        public void MoveElement(Group targetGroup, int oldIndex, int newIndex)
+        public void MoveElement(int groupIndex, int oldIndex, int newIndex, bool removeOld)
         {
-            Group tempGroup = targetGroup;
-            playlists[oldIndex].groupsList.Remove(targetGroup);
+            Group tempGroup = playlists[oldIndex].groupsList[groupIndex].Clone();
+            if (removeOld)
+                playlists[oldIndex].groupsList.RemoveAt(groupIndex);
             playlists[newIndex].groupsList.Add(tempGroup);
         }
 
         // аналогично для канала, но нужно больше входных данных - об индексе плейлиста
-        public void MoveElement(int channelIndex, (int, int) oldIndex, (int, int) newIndex)
+        public void MoveElement(int channelIndex, (int, int) oldIndex, (int, int) newIndex, bool removeOld)
         {
             Channel tempChannel = playlists[oldIndex.Item1].groupsList[oldIndex.Item2].channelsList[channelIndex];
-            playlists[oldIndex.Item1].groupsList[oldIndex.Item2].channelsList.Remove(tempChannel);
+            if (removeOld)
+                playlists[oldIndex.Item1].groupsList[oldIndex.Item2].channelsList.RemoveAt(channelIndex);
             playlists[newIndex.Item1].groupsList[newIndex.Item2].channelsList.Add(tempChannel);
         }
 
         // переносим группу из одного места внутри плейлиста в другое
         // (группа для переноса, индекс плейлиста-источника переноса, (индекс плейлиста-цели переноса, индекс группы-цели переноса))
-        public void MoveElement(bool group, int[] oldCoords, int[] newCoords)
+        public void MoveElement(bool group, int[] oldCoords, int[] newCoords, bool removeOld)
         {
-            Group tempGroup = playlists[oldCoords[0]].groupsList[oldCoords[1]];
-            playlists[oldCoords[0]].groupsList.Remove(tempGroup);
+            Group tempGroup = playlists[oldCoords[0]].groupsList[oldCoords[1]].Clone();
+            if (removeOld)
+                playlists[oldCoords[0]].groupsList.RemoveAt(oldCoords[1]);
             playlists[newCoords[0]].groupsList.Insert(newCoords[1], tempGroup);
         }
 
         // аналогично для канала, но нужно больше входных данных - об индексе плейлиста
-        public void MoveElement(int[] oldCoords, int[] newCoords)
+        public void MoveElement(int[] oldCoords, int[] newCoords, bool removeOld)
         {
             Channel tempChannel = playlists[oldCoords[0]].groupsList[oldCoords[1]].channelsList[oldCoords[2]];
-            playlists[oldCoords[0]].groupsList[oldCoords[1]].channelsList.Remove(tempChannel);
+            if (removeOld)
+                playlists[oldCoords[0]].groupsList[oldCoords[1]].channelsList.RemoveAt(oldCoords[2]);
             playlists[newCoords[0]].groupsList[newCoords[1]].channelsList.Insert(newCoords[2], tempChannel);
         }
 
