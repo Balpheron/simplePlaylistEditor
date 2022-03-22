@@ -17,6 +17,7 @@ namespace PlaylistEditor
         public static readonly string altGroupTag = "#EXTGRP:"; // альтернативный тег группы каналов
         public const string defaultGroupName = "Новая категория";
         public const string newChannelName = "Новый канал";
+        public const string newPlaylistName = "Новый плейлист";
         public static string GetStringBetween(string sourceString, string replaceTag)
         {
             string result = sourceString.Replace(replaceTag, "");

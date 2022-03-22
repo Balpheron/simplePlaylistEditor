@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PlaylistEditor
 {
-    public class Channel : IEquatable<Channel>
+    public class Channel : IEquatable<Channel>, INodeData
     {
         
         public static int channelsCount = 0;
@@ -88,18 +88,21 @@ namespace PlaylistEditor
             return channelInfo;
         }
 
-        public Channel Clone()
+        // клонирование канала
+        public INodeData Clone()
         {
-            Channel channel = new Channel();
-            channel.Name = Name;
-            channel.channelDuration = channelDuration;
-            channel.channelPath = channelPath;
-            channel.logoPath = logoPath;
-            channel.channelDuration = channelDuration;
+            Channel channel = new Channel(channelPath, Name, logoPath, groupName, ChannelDuration);
             channel.groupName = groupName;
             channel.additionalData = additionalData;
             channel.customData = customData;
-            return channel;
+            INodeData result = channel;
+
+            return result;
+        }
+
+        public void Rename(string newName)
+        {
+            Name = newName;
         }
     }
 }

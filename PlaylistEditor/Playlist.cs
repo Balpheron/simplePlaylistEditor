@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace PlaylistEditor
 {
-    public class Playlist
+    public class Playlist : INodeData, INodeDataCollection, IEnumerable
     {
         string name = "DefaultPlaylist";
         public string Name { get { return name; } set { if (value == "") name = "DefaultPlaylist"; else name = value; } }
         
-        public List<Group> groupsList;
+        internal List<Group> groupsList;
 
         string header = "";
         public string Header { get { return header; } set { header = value; } }
@@ -23,9 +24,11 @@ namespace PlaylistEditor
         public int CurrentChannelIndex { set { currentChannelIndex = value; } }   
         public Channel CurrentChannel { get {  return groupsList[currentGroupIndex].channelsList[currentChannelIndex]; } } // возвращает выбранный канал
 
-        public Playlist(string name)
+        public Playlist(string name = "")
         {
             Name = name;
+            if (name == "")
+                Name = Syntax.newPlaylistName;
             groupsList = new List<Group>();
         }
 
@@ -96,5 +99,114 @@ namespace PlaylistEditor
             groupsList[endingPosition.group].channelsList.Add(tempChannel);
         }
 
+        public INodeData Clone()
+        {
+            return this;
+        }
+
+
+        public void RemoveChild(int index)
+        {
+            groupsList.RemoveAt(index);
+        }
+
+        public void AddChild(INodeData element, int index = -1)
+        {
+            if (index == -1)
+                groupsList.Add((Group)element);
+            else groupsList.Insert(index, (Group)element);
+        }
+
+        public string AddChild()
+        {
+            Group group = new Group();
+            groupsList.Add(group);
+            return group.Name;
+        }
+
+        public void AddChannel(Channel channel, int groupIndex)
+        {
+            groupsList[groupIndex].AddChild(channel);
+        }
+
+        public void Rename(string newName)
+        {
+            Name = newName;
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return new PlaylistEnum(groupsList);
+        }
+
+        public string PlaylistToFile()
+        {
+            string result = "";
+            // добавляем в самое начало файла заголовок плейлиста
+            result += $"{Header}\n";
+            // перебираем по порядку канала в каждой группе указанного плейлиста
+            
+            for (int i = 0; i < groupsList.Count; i++)
+            {
+                for (int k = 0; k < groupsList[i].channelsList.Count; k++)
+                {
+                    try
+                    {
+                        result += groupsList[i].channelsList[k].GetChannelStringInfo(null);
+                    }
+                    catch (Exception e)
+                    {
+                        return "Fail";
+                    }
+
+                }
+            }
+            return result;
+        }
     }
+
+    /*перебирает все каналы во всех группах плейлиста и возвращаем координаты
+     * в формате [индекс группы, индекс канала]
+     */
+    public class PlaylistEnum : IEnumerator
+    {
+        private int groupPosition = 0;
+        private int listPosition = -1;
+        private List<Group> groups;
+        
+
+        public PlaylistEnum(List<Group> groups)
+        {
+            this.groups = groups;
+            
+        }
+
+        public object Current { get { return new int[] {groupPosition, listPosition}; } }
+
+        public bool MoveNext()
+        {
+            listPosition++;
+            if (listPosition >= groups[groupPosition].channelsList.Count)
+            {
+                listPosition = -1;
+                groupPosition++;
+            }
+            return (groupPosition < groups.Count);
+        }
+
+        public void Reset()
+        {
+            groupPosition = listPosition = -1;
+        }
+
+        object IEnumerator.Current
+        {
+            get
+            {
+                return Current;
+            }
+        }
+    }
+
 }
+

@@ -24,12 +24,14 @@ namespace PlaylistEditor
 
         bool dragTime;
 
-        CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-
         private List<Label> customValuesLabels = new List<Label>();
         private List<TextBox> customValuesText = new List<TextBox>();
 
         TreeNode? bufferNode;
+
+        internal static Form1 instance;
+        internal TreeView MainTree { get { return treeView1; }}
+        
 
         public Form1()
         {
@@ -41,6 +43,7 @@ namespace PlaylistEditor
             OnPlaylistClick += VisualizePlaylist;
             OnGroupClick += VisualizeGroup;
             OnChannelClick += VisualizeChannel;
+            playlistManager.OnError += ShowErrorMessage;
         }
 
         //вывод сообщений об ошибках
@@ -59,6 +62,7 @@ namespace PlaylistEditor
         
         private void Form1_Load(object sender, EventArgs e)
         {
+            instance = this;
             // добавляем обработчик события нажатия кнопки для каждого текстового поля группы сведений о канале, чтобы активировать кнопку сохранения
             foreach (Control ctrl in this.channelGroup.Controls)
             {
@@ -81,6 +85,7 @@ namespace PlaylistEditor
             Configurator.mainForm = this;
             Configurator.ReadConfig();
             CustomValuesUI();
+            
         }
 
         private async void OpenListButton_Click(object sender, EventArgs e)
@@ -92,15 +97,14 @@ namespace PlaylistEditor
             string fileText = System.IO.File.ReadAllText(fileName); //считываем текст из файла
 
             //запускае параллельную задачу, в которой получаем плейлист и генерируем на его основе дерево
-            Task generationProcess = new Task(() => {
+            await Task.Run(() => {
                 playlistGenerator = GeneratePlaylistTree;
                 playlistManager.playlists.Add(playlistManager.GeneratePlaylist(ref fileText, fileName)); //создаем объект плейлиста из полученных данных
                 playlistManager.CurrentPlaylistIndex = playlistManager.playlists.Count - 1; // созданный плейлист становится текущим плейлистом
                 playlistManager.GeneratePlaylistTree();   
                 
             });
-
-           generationProcess.Start();            
+        
 
         }
 
@@ -169,7 +173,7 @@ namespace PlaylistEditor
             //пытаемся загрузить изображение по ссылке
             try
             {
-               logoPicture.Image = await Task.Run(() => LoadLogo(currentChannel.LogoPath));
+               logoPicture.Image = await Task.Run(() => WebManager.LoadImage(currentChannel.LogoPath));
             }
             catch (Exception)
             {
@@ -186,28 +190,6 @@ namespace PlaylistEditor
         public void VisualizePlaylist()
         {
             channelGroup.Visible = false;
-        }
-
-                
-        //загрузка изображений по ссылке
-        async Task<Image> LoadLogo(string logoLink)
-        {
-            try
-            {
-                // осуществляем запрос и получаем поток
-                HttpResponseMessage response = await WebManager.client.GetAsync(logoLink);
-                response.EnsureSuccessStatusCode();
-                var stream = await response.Content.ReadAsStreamAsync();
-                return Image.FromStream(stream);              
-
-            }
-            catch (Exception)
-            {
-                // в случае неудачи очищаем логотип
-                ShowErrorMessage($"Failed to load image: {logoLink}");
-                return null;
-                
-            }
         }
 
         private void TextChangedChecker(object sender, EventArgs e)
@@ -244,17 +226,7 @@ namespace PlaylistEditor
             {
                 if (e.Label.Length > 0)
                 {
-                    switch (e.Node?.Level)
-                    {
-                        //если редактируется название плейлиста, то просто меняем его в соответствующем объекте
-                        case 0: playlistManager.CurrentPlaylist.Name = e.Label; break;
-                        //если редактируется группа, то помимо изменения его названия в объекте также меняем ее название во всех каналах
-                        case 1: playlistManager.CurrentPlaylist.groupsList[e.Node.Parent.Index].Name = e.Label; GroupRename(e.Node.Index, e.Label); break;
-                        //если редактируется канал, меняем его название в объекте
-                        case 2: playlistManager.CurrentPlaylist.groupsList[e.Node.Parent.Index].channelsList[e.Node.Index].Name = e.Label; channelNameText.Text = e.Label; break;
-                        default: break;
-                    }
-
+                    TreeManager.RenameElement(e.Node, e.Label);
                     e.Node?.EndEdit(false);
                 }
                 else
@@ -267,14 +239,7 @@ namespace PlaylistEditor
                 }
             }
         }
-
-        //изменение имени группы для всех каналов в переименовываемой группе
-        private void GroupRename(int groupIndex, string newGroupName)
-        {
-            for (int i = 0; i < playlistManager.CurrentPlaylist.groupsList[groupIndex].channelsList.Count; i++)
-                playlistManager.CurrentPlaylist.groupsList[groupIndex].channelsList[i].GroupName = newGroupName;
-            
-        }
+               
 
         // сохраняем в объект информацию из всех текстовых строк
         async private void SaveChannelData()
@@ -339,7 +304,7 @@ namespace PlaylistEditor
                 // загружаем новый логотип
                 try
                 {
-                    logoPicture.Image = await Task.Run(() => LoadLogo(currentChannel.LogoPath));
+                    logoPicture.Image = await Task.Run(() =>  WebManager.LoadImage(currentChannel.LogoPath));
                 }
                 catch (Exception)
                 {
@@ -370,7 +335,7 @@ namespace PlaylistEditor
         {
             try
             {
-                logoPicture.Image = await Task.Run(() => LoadLogo(logoLinkText.Text));
+                logoPicture.Image = await Task.Run(() => WebManager.LoadImage(logoLinkText.Text));
             }
             catch (Exception)
             {
@@ -384,7 +349,7 @@ namespace PlaylistEditor
             //перемещаем выбранный узел
             if (e.Button == MouseButtons.Left)
             {
-                dragTime = true;
+                dragTime = true; // включаем запрет на визуализацию информации об узлах
                 DoDragDrop(e.Item, DragDropEffects.Move);
             }
         }
@@ -406,6 +371,7 @@ namespace PlaylistEditor
             TreeNode draggedNode = (TreeNode)e.Data.GetData(typeof(TreeNode));
 
             // выбираем узел по координатам положения указателя
+            // не будут выбираться узлы, которые ниже уровне перетаскиваемого
             if (draggedNode.Level >= targetNode?.Level)
                 treeView1.SelectedNode = targetNode;
         }
@@ -432,132 +398,18 @@ namespace PlaylistEditor
             // убеждаемся, что перетаскиваемый и выбранный узел - не одно и то же
             if (!draggedNode.Equals(targetNode) && e.Effect == DragDropEffects.Move)
             {
-                PasteNode(ref draggedNode, ref targetNode, true);
                 dragTime = false;
+                string success = TreeManager.PasteNode(ref draggedNode, ref targetNode, true);
             }
         }
-
-        void PasteNode(ref TreeNode draggedNode, ref TreeNode targetNode, bool removeDragged)
-        {
-            // в зависимости от уровня глубины переносимого нода 
-            switch (draggedNode.Level)
-            {
-                // плейлист - ничего
-                case 0: return;
-                // группа
-                case 1:
-                    {
-                        // в зависимости от глубины целевого узла
-                        switch (targetNode.Level)
-                        {
-                            // если это не родной плейлист, добавляем в конец этого плейлиста текущую группу
-                            case 0:
-                                {
-                                    if (targetNode.Index != draggedNode.Parent.Index || !removeDragged)
-                                    {
-                                        // перемещенме объектов в коллекции
-                                        playlistManager.MoveElement(draggedNode.Index, draggedNode.Parent.Index, targetNode.Index, removeDragged);
-                                        MoveNode(ref draggedNode, ref targetNode, removeDragged);
-                                    }
-                                    else return;
-                                    break;
-                                }
-                            // если это другая группа, то ставим переносимую группа на место целевой группы
-                            case 1:
-                                {
-                                    // перемещенме объектов в коллекции
-
-                                    SwapNodes(ref draggedNode, ref targetNode, 1, removeDragged);
-                                    break;
-                                }
-                            default: return;
-                        }
-                        break;
-                    }
-                // канал
-                case 2:
-                    {
-                        // в зависимости от глубины целевого узла
-                        switch (targetNode.Level)
-                        {
-                            // если это не родная категория, добавляем в конец этой категории текущий канал
-                            case 1:
-                                {
-                                    if (targetNode.Index != draggedNode.Parent.Index || !removeDragged)
-                                    {
-                                        // перемещенме объектов в коллекции
-                                        playlistManager.MoveElement(draggedNode.Index, (draggedNode.Parent.Parent.Index, draggedNode.Parent.Index), (targetNode.Parent.Index, targetNode.Index), removeDragged);
-                                        MoveNode(ref draggedNode, ref targetNode, removeDragged);
-                                    }
-                                    else return;
-                                    break;
-                                }
-                            // если это другой канал, то ставим переносимую группа на место целевой группы
-                            case 2:
-                                {
-                                    // перемещенме объектов в коллекции
-                                    SwapNodes(ref draggedNode, ref targetNode, 2, removeDragged);
-                                    break;
-                                }
-                            default: return;
-                        }
-                        break;
-                    }
-
-            }
-        }
-
-            void SwapNodes(ref TreeNode draggedNode, ref TreeNode targetNode, int level, bool removeDragged)
-        {
-            // перемещение узлов
-            TreeNode clondeNode = (TreeNode)draggedNode.Clone();
-            int[] oldNode = GetCoordinates(draggedNode);
-            // если узел перетаскивается снизу, он становится на место выделенного узла, а выделенный смещается вниз
-            if (draggedNode.Index > targetNode.Index || draggedNode.Parent.Index > targetNode.Parent.Index)
-                targetNode.Parent.Nodes.Insert(targetNode.Index, clondeNode);
-            // если сверху, то перестаскиваемый узел становится снизу выделенного
-            else targetNode.Parent.Nodes.Insert(targetNode.Index + 1, clondeNode);
-            //удаляем перетаскиваемый узел и выделяем вставленную копию
-            if (removeDragged)
-            draggedNode.Remove();
-
-            
-            int[] newNode = GetCoordinates(clondeNode);
-
-            if (level == 2)
-            playlistManager.MoveElement(oldNode, newNode, removeDragged);
-            else playlistManager.MoveElement(true, oldNode, newNode, removeDragged);
-            treeView1.SelectedNode = clondeNode;
-        }
-
-        void MoveNode(ref TreeNode draggedNode, ref TreeNode targetNode, bool removeDragged) 
-        {
-            // перемещение узлов
-            // если нужно, то удаляем исходный узел для перемещения
-            if (removeDragged)
-            {
-                draggedNode.Remove();
-                targetNode.Nodes.Add(draggedNode);
-            }
-            else
-            {
-                TreeNode clone = (TreeNode)draggedNode.Clone();
-                targetNode.Nodes.Add(clone);
-            }
-        }
+                 
 
         // удаляем выбранный узел и информацию о нем
         public void DeleteNode()
         {
             if (treeView1.SelectedNode == null)
-                throw new Exception("No node selected");
-            // создаем массив в длинной, равной глубине выбранного узла
-            TreeNode curNode = treeView1.SelectedNode;
-            int[] coordinates = GetCoordinates(curNode);
-            // удаляем объект из коллекции
-            playlistManager.DeleteElement(coordinates);
-            // удаляем узел
-            treeView1.SelectedNode.Remove();
+                return;
+            TreeManager.DeleteNodeData(treeView1.SelectedNode);
         }
 
         private void deleteButton_Click(object sender, EventArgs e)
@@ -583,33 +435,11 @@ namespace PlaylistEditor
             }
         }
 
+        // добавление элемента
         public void NewElement()
         {
             TreeNode? selected = treeView1.SelectedNode;
-            string newGroupName = "";
-            try
-            {
-                // если хоть какой-то узел выделен, добавляем элемент в зависимости от глубины
-                if (selected != null) 
-                {
-                    switch (selected.Level)
-                    {
-                        case 0: newGroupName = playlistManager.AddGroup(selected.Index); break;
-                        case 1: newGroupName = playlistManager.AddChannel((selected.Parent.Index, selected.Index)); break;
-                        default: return;
-
-                    }
-                 
-                }
-                // создаем узел с полученным именем
-                selected?.Nodes.Add(newGroupName);
-            }
-            catch (Exception e)
-            {
-                ShowErrorMessage(e.Message);
-            }
-            
-            
+            TreeManager.AddElement(selected);            
         }
 
         public async Task SavePlaylist()
@@ -619,7 +449,7 @@ namespace PlaylistEditor
                 // определяем индекс выбранного плейлиста или присваем индекс по умолчанию
                 int playlistIndex = 0;
                 if (treeView1.SelectedNode != null)
-                    playlistIndex = GetCoordinates(treeView1.SelectedNode)[0];
+                    playlistIndex = TreeManager.GetCoordinates(treeView1.SelectedNode)[0];
 
                 saveFileDialog1.FileName = playlistManager.playlists[playlistIndex].Name;
 
@@ -629,7 +459,7 @@ namespace PlaylistEditor
                 string fileName = saveFileDialog1.FileName;
 
                 Task generationProcess = new Task(() => {
-                    string fileContent = playlistManager.SavePlaylistAsFile(playlistIndex, fileName);
+                    string fileContent = playlistManager.SavePlaylistAsFile(playlistIndex);
                     System.IO.File.WriteAllText(fileName, fileContent);
                 });
 
@@ -654,160 +484,51 @@ namespace PlaylistEditor
             SavePlaylist();
         }
 
-        // получение массива из индексов узла и всех его родительских узлов
-        int[] GetCoordinates(TreeNode targetNode)
-        {
-            // создаем массив в длинной, равной глубине выбранного узла
-            int[] coordinates = new int[targetNode.Level + 1];
-            // записываем последовательно индексы узла и его родительских узлов
-            int curStep = targetNode.Level;
-            while (curStep >= 0)
-            {
-                coordinates[curStep] = targetNode.Index;
-                try
-                {
-                    targetNode = targetNode.Parent;
-                }
-                catch (Exception)
-                {
-                    break;
-                }
-                curStep--;
-            }
-
-            return coordinates;
-        }
 
         // проверяем выбранный канал на доступность
         // просто посылаем запрос на указанный адрес, и, если он успешен, считаем канал доступным
         private async void checkButton_Click(object sender, EventArgs e)
         {
-            Channel currentChannel = playlistManager.CurrentPlaylist.CurrentChannel;
-            CheckChannel(currentChannel.ChannelPath, true);
+            int[] coords = TreeManager.GetCoordinates(treeView1.SelectedNode);
+            string status = await Task.Run(() => WebManager.CheackAvailability(coords, true));
+            ShowErrorWindow(status);
         }
 
-        async Task<bool> CheckChannel(string checkPath, bool showMessage)
-        {
-            try
-            {
-                // осуществляем запрос и получаем поток
-                using var cts = new CancellationTokenSource();
-                // максимальное время на запрос
-                int timeout = Configurator.currentConfig.CheckTimeoutTime;
-                
-                cts.CancelAfter(TimeSpan.FromSeconds(timeout));
-
-                HttpResponseMessage response = await WebManager.client.GetAsync(checkPath, cts.Token);
-                response.EnsureSuccessStatusCode();
-                // string data = await response.Content.ReadAsStringAsync();
-                // показываем сообщение
-                if (showMessage)
-                    ShowErrorWindow("Канал доступен");
-            }
-            catch (Exception)
-            {
-                // показываем сообщение
-                if (showMessage)
-                    ShowErrorWindow("Канал НЕдоступен");
-                // если запрос неудачен, считаем, что канала недоступен
-                return false;
-            }
-
-            return true;
-        }
-
-        // проверка каналов в дереве
-        async Task CheckChannelGlobal(int[] coords)
-        {
-            try
-            {
-               
-                // текущий канал для проверки временно отмечается серым
-                treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Gray;
-
-                bool status;
-                var processor = CheckChannel(playlistManager.playlists[coords[0]].groupsList[coords[1]].channelsList[coords[2]].ChannelPath, false);
-                status = await processor;
-                // перекрашиваем в нужный цвет в зависимости от результата
-                if (status)
-                    treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Green;
-                else treeView1.Nodes[coords[0]].Nodes[coords[1]].Nodes[coords[2]].BackColor = Color.Red;
-            }
-            catch (Exception e)
-            {
-                ShowErrorMessage(e.Message);
-            }
-            
-        }
-
+        // проверяем все каналы выбранного элемента дерева
         private async void checkAllButton_Click(object sender, EventArgs e)
         {
-            // останавливаем идущий процесс
-            StopChecking();
-            CancellationToken token = cancelTokenSource.Token;
-            var processor = CheckAllChannels(token);
-            await processor;
+            checkAllButton.Enabled = false;
+
+            // получаем координаты выбранного узла; если ничего не выбрано,
+            // используем первый плейлист из списка, если он есть
+            int[] coords;
+            if (treeView1.SelectedNode != null)
+            {
+                coords = TreeManager.GetCoordinates(treeView1.SelectedNode);
+                treeView1.SelectedNode.ExpandAll();
+            }
+            else coords = new int[] { 0 };
+
+            // запускаем основной поток проверки доступности 
+            try
+            {
+                await Task.Run(() => WebManager.CheckGroupOfChannels(coords));
+            }
+            catch (Exception ex)
+            {
+                ShowErrorMessage(ex.Message);
+            }
+            finally
+            {
+                checkAllButton.Enabled = true; // делаем кнопку доступной по окончании
+            }
+            
         }
 
         void StopChecking()
         {
-            cancelTokenSource.Cancel();
-            cancelTokenSource.Dispose();
-            cancelTokenSource = new CancellationTokenSource();
-        }
-
-        async Task CheckAllChannels(CancellationToken token)
-        {
-            // определяем объект для проверки
-            int[] checkCoords;
-            if (treeView1.SelectedNode != null)
-                checkCoords = GetCoordinates(treeView1.SelectedNode);
-            // если никакой узел не выбран, проверяем первый плейлист по списку
-            else checkCoords = new int[] { 0 };
-            
-            // проверяем выделенные объекты
-            switch (checkCoords.Length)
-            {
-                // канал
-                case 3:
-                    var processor = CheckChannelGlobal(checkCoords);
-                    
-                    await processor;
-                    break;
-                // группу каналов
-                case 2:
-                    for (int k = 0; k < playlistManager.playlists[checkCoords[0]].groupsList[checkCoords[1]].channelsList.Count; k++)
-                    {
-                        if (token.IsCancellationRequested)
-                        {
-                            ShowErrorMessage("Проверка остановлена");
-                            return;
-                        }
-
-                        processor = CheckChannelGlobal(new int[] {checkCoords[0], checkCoords[1], k});
-                        await processor;
-                    }
-                    break;
-                // весь плейлист
-                case 1:
-                    for (int i = 0; i < playlistManager.playlists[checkCoords[0]].groupsList.Count; i++)
-                    {
-                        for (int k = 0; k < playlistManager.playlists[checkCoords[0]].groupsList[i].channelsList.Count; k++)
-                        {
-                            if (token.IsCancellationRequested)
-                            {
-                                ShowErrorMessage("Проверка остановлена");
-                                return;
-                            }
-
-                            processor = CheckChannelGlobal(new int[] { checkCoords[0], i, k });
-                            await processor;
-                        }
-                    }
-                    break;
-            }
-            // проверяем доступность выбранного объекта
-
+            WebManager.CancelProcess();
+            checkAllButton.Enabled = true;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -911,12 +632,7 @@ namespace PlaylistEditor
                 return;
 
             TreeNode seleceted = treeView1.SelectedNode;
-            PasteNode(ref bufferNode, ref seleceted, false);
-
-            for (int i = 0; i < playlistManager.CurrentPlaylist.groupsList.Count; i++)
-            {
-                ShowErrorMessage($"{playlistManager.CurrentPlaylist.groupsList[i].Name} ");
-            }
+            TreeManager.PasteNode(ref bufferNode, ref seleceted, false);
         }
     }
 

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace PlaylistEditor
 {
-    public class PlaylistManager
+    public class PlaylistManager : INodeDataCollection
     {
         public List<Playlist> playlists = new List<Playlist>();
         int currentPlaylistIndex = 0;
@@ -15,8 +15,16 @@ namespace PlaylistEditor
         public Playlist CurrentPlaylist { get { return playlists[currentPlaylistIndex]; } } 
 
         public delegate void ErrorMessage(string message);
-        event ErrorMessage? OnError;
-        
+        internal event ErrorMessage? OnError;
+        private static PlaylistManager instance;
+
+        public static PlaylistManager GetInstance()
+        {
+            if (instance == null)
+                instance = new PlaylistManager();
+            return instance;
+        }
+
         Form1 mainForm;
 
         public void AddListener(ErrorMessage messager)
@@ -24,9 +32,15 @@ namespace PlaylistEditor
             OnError += messager;
         }
 
+        public PlaylistManager()
+        {
+            mainForm = new Form1();
+        }
+
         public PlaylistManager(Form1 mainForm)
         {
             this.mainForm = mainForm;
+            instance = this;
         }
 
         public Playlist GeneratePlaylist(ref string rawContent, string filePath = "")
@@ -71,7 +85,7 @@ namespace PlaylistEditor
 
                 tempChannel = GenerateChannel(channelsInfoString[i], customTags);
                 int groupIndex = playlist.FindGroup(tempChannel.GroupName, true); //ищем нужную категорию
-                playlist.groupsList[groupIndex].channelsList.Add(tempChannel); //добавляем канал в эту категорию
+                playlist.AddChannel(tempChannel, groupIndex); //добавляем канал в эту категорию
 
             }
 
@@ -179,122 +193,65 @@ namespace PlaylistEditor
             return result;
         }
 
-        // переносим группу из одного плейлиста в другой
-        // (группа для переноса, индекс плейлиста-источника переноса, индекс плейлиста-цели переноса)
-        public void MoveElement(int groupIndex, int oldIndex, int newIndex, bool removeOld)
+        public string SavePlaylistAsFile(int playlistIndex)
         {
-            Group tempGroup = playlists[oldIndex].groupsList[groupIndex].Clone();
-            if (removeOld)
-                playlists[oldIndex].groupsList.RemoveAt(groupIndex);
-            playlists[newIndex].groupsList.Add(tempGroup);
-        }
-
-        // аналогично для канала, но нужно больше входных данных - об индексе плейлиста
-        public void MoveElement(int channelIndex, (int, int) oldIndex, (int, int) newIndex, bool removeOld)
-        {
-            Channel tempChannel = playlists[oldIndex.Item1].groupsList[oldIndex.Item2].channelsList[channelIndex];
-            if (removeOld)
-                playlists[oldIndex.Item1].groupsList[oldIndex.Item2].channelsList.RemoveAt(channelIndex);
-            playlists[newIndex.Item1].groupsList[newIndex.Item2].channelsList.Add(tempChannel);
-        }
-
-        // переносим группу из одного места внутри плейлиста в другое
-        // (группа для переноса, индекс плейлиста-источника переноса, (индекс плейлиста-цели переноса, индекс группы-цели переноса))
-        public void MoveElement(bool group, int[] oldCoords, int[] newCoords, bool removeOld)
-        {
-            Group tempGroup = playlists[oldCoords[0]].groupsList[oldCoords[1]].Clone();
-            if (removeOld)
-                playlists[oldCoords[0]].groupsList.RemoveAt(oldCoords[1]);
-            playlists[newCoords[0]].groupsList.Insert(newCoords[1], tempGroup);
-        }
-
-        // аналогично для канала, но нужно больше входных данных - об индексе плейлиста
-        public void MoveElement(int[] oldCoords, int[] newCoords, bool removeOld)
-        {
-            Channel tempChannel = playlists[oldCoords[0]].groupsList[oldCoords[1]].channelsList[oldCoords[2]];
-            if (removeOld)
-                playlists[oldCoords[0]].groupsList[oldCoords[1]].channelsList.RemoveAt(oldCoords[2]);
-            playlists[newCoords[0]].groupsList[newCoords[1]].channelsList.Insert(newCoords[2], tempChannel);
-        }
-
-        // удаляем канал по определенным координатам
-        public void DeleteElement(params int[] coordinates)
-        {
-            switch (coordinates.Length)
-            {
-                case 1: playlists.RemoveAt(coordinates[0]); break;
-                case 2: playlists[coordinates[0]].groupsList.RemoveAt(coordinates[1]); break;
-                case 3: playlists[coordinates[0]].groupsList[coordinates[1]].channelsList.RemoveAt(coordinates[2]); break;
-                default: return;
-                    
-            }
-        }
-
-        public string AddGroup(int playlistIndex)
-        {
-            try
-            {
-                playlists[playlistIndex].groupsList.Add(new Group());
-            }
-            catch (Exception)
-            {
-                throw new Exception("Cannot add new group");
-            }
-
-            return playlists[playlistIndex].groupsList[^1].Name;
-            
-        }
-
-        public string AddChannel((int, int) coordinates)
-        {
-            try
-            {
-                playlists[coordinates.Item1].groupsList[coordinates.Item2].channelsList.Add(new Channel());
-            }
-            catch (Exception)
-            {   
-                throw new Exception("Cannot add new group");
-            }
-
-            return playlists[coordinates.Item1].groupsList[coordinates.Item2].channelsList[^1].Name;
-        }
-
-        public string SavePlaylistAsFile(int playlistIndex, string filePath)
-        {
-            string result = "";
-            // добавляем в самое начало файла заголовок плейлиста
-            result += $"{playlists[playlistIndex].Header}\n";
-            // перебираем по порядку канала в каждой группе указанного плейлиста
-            for (int i = 0; i < playlists[playlistIndex].groupsList.Count; i++)
-            {
-                for (int k = 0; k < playlists[playlistIndex].groupsList[i].channelsList.Count; k++)
-                {
-                    try
-                    {
-                        result += playlists[playlistIndex].groupsList[i].channelsList[k].GetChannelStringInfo(null);
-                    }
-                    catch (Exception e)
-                    {
-                        mainForm.ShowErrorWindow(e.Message);
-                    }
-                    
-                }
-            }
-
+            string result = playlists[playlistIndex].PlaylistToFile();
             return result;
         }
 
         // получаем объект по заданным координатам в древе
-        public object? GetObject(int[] coordinates)
+        public INodeData? GetObject(int[] coordinates)
         {
             switch (coordinates.Length)
             {
-                case 0: return playlists[coordinates[0]];
-                case 1: return playlists[coordinates[0]].groupsList[coordinates[1]];
-                case 2: return playlists[coordinates[0]].groupsList[coordinates[1]].channelsList[coordinates[2]];
+                case 1: return playlists[coordinates[0]];
+                case 2: return playlists[coordinates[0]].groupsList[coordinates[1]];
+                case 3: return playlists[coordinates[0]].groupsList[coordinates[1]].channelsList[coordinates[2]];
                 default: return null;
-            }
+            }            
         }
+
+        // получаем родительский объект по заданным координатам в древе
+        public INodeDataCollection? GetParent(int[] coordinates)
+        {
+            try
+            {
+                switch (coordinates.Length)
+                {
+                    case 2: return playlists[coordinates[0]];
+                    case 3: return playlists[coordinates[0]].groupsList[coordinates[1]];
+                    default: return this;
+                }
+            }
+            catch (Exception)
+            {
+                return this;
+            }
+            
+
+        }
+
+        public void RemoveChild(int index)
+        {
+            playlists.RemoveAt(index);
+        }
+
+        public void AddChild(INodeData element, int index = -1)
+        {
+            if (index == -1)
+                playlists.Add((Playlist)element);
+            else playlists.Insert(index, (Playlist)element);
+        }
+
+        public string AddChild()
+        {
+            Playlist newPlaylist = new Playlist("");
+            playlists.Add(newPlaylist);
+            return newPlaylist.Name;
+        }
+
+        // удаляем канал по определенным координатам
+
     }
 
     
