@@ -138,7 +138,11 @@ namespace PlaylistEditor
             if (selected == null)
             {
                 displayedName = PlaylistManager.GetInstance().AddChild();
-                Form1.instance.MainTree.Nodes.Add(displayedName);
+                TreeNode playlistNode = new TreeNode(displayedName);
+
+                playlistNode.ImageIndex = playlistNode.SelectedImageIndex = 5;
+
+                Form1.instance.MainTree.Nodes.Add(playlistNode);
             }
             // добавляем новый элемент в выбранную коллекцию
             else
@@ -151,8 +155,13 @@ namespace PlaylistEditor
 
                 displayedName = nodeDataCollection.AddChild();
             }
+            TreeNode node = new TreeNode(displayedName);
+
+            if (selected?.Level == 0)
+                node.ImageIndex = node.SelectedImageIndex = 6;
+
             // добавляем узел в дерево
-            selected?.Nodes.Add(displayedName);
+            selected?.Nodes.Add(node);
         }
 
         internal static void RenameElement(TreeNode selected, string newName)

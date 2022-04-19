@@ -34,6 +34,13 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.headerColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.vlcPath = new System.Windows.Forms.TextBox();
+            this.vlcPathHeader = new System.Windows.Forms.Label();
+            this.settingsButton = new System.Windows.Forms.Button();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.scheduleHeader = new System.Windows.Forms.Label();
+            this.scheduleText = new System.Windows.Forms.TextBox();
+            this.scheduleCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -59,7 +66,7 @@
             // customParamsHeader
             // 
             this.customParamsHeader.AutoSize = true;
-            this.customParamsHeader.Location = new System.Drawing.Point(10, 62);
+            this.customParamsHeader.Location = new System.Drawing.Point(10, 240);
             this.customParamsHeader.Name = "customParamsHeader";
             this.customParamsHeader.Size = new System.Drawing.Size(163, 15);
             this.customParamsHeader.TabIndex = 3;
@@ -72,7 +79,7 @@
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.headerColumn,
             this.dataColumn});
-            this.dataGridView1.Location = new System.Drawing.Point(22, 83);
+            this.dataGridView1.Location = new System.Drawing.Point(14, 267);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowTemplate.Height = 25;
             this.dataGridView1.Size = new System.Drawing.Size(457, 289);
@@ -94,11 +101,81 @@
             this.dataColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dataColumn.Width = 210;
             // 
+            // vlcPath
+            // 
+            this.vlcPath.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.vlcPath.Location = new System.Drawing.Point(14, 81);
+            this.vlcPath.MaxLength = 1000;
+            this.vlcPath.Name = "vlcPath";
+            this.vlcPath.Size = new System.Drawing.Size(427, 23);
+            this.vlcPath.TabIndex = 6;
+            // 
+            // vlcPathHeader
+            // 
+            this.vlcPathHeader.AutoSize = true;
+            this.vlcPathHeader.Location = new System.Drawing.Point(14, 63);
+            this.vlcPathHeader.Name = "vlcPathHeader";
+            this.vlcPathHeader.Size = new System.Drawing.Size(111, 15);
+            this.vlcPathHeader.TabIndex = 7;
+            this.vlcPathHeader.Text = "Путь до VLC player:";
+            // 
+            // settingsButton
+            // 
+            this.settingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.settingsButton.Image = global::PlaylistEditor.Properties.Resources.OpenFolder;
+            this.settingsButton.Location = new System.Drawing.Point(447, 81);
+            this.settingsButton.Name = "settingsButton";
+            this.settingsButton.Size = new System.Drawing.Size(24, 24);
+            this.settingsButton.TabIndex = 23;
+            this.settingsButton.UseVisualStyleBackColor = true;
+            this.settingsButton.Click += new System.EventHandler(this.settingsButton_Click);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.DefaultExt = "exe";
+            this.openFileDialog1.FileName = "vlc.exe";
+            this.openFileDialog1.Filter = "VLC exe|*.exe";
+            this.openFileDialog1.Title = "VLC Player Path";
+            // 
+            // scheduleHeader
+            // 
+            this.scheduleHeader.AutoSize = true;
+            this.scheduleHeader.Location = new System.Drawing.Point(10, 176);
+            this.scheduleHeader.Name = "scheduleHeader";
+            this.scheduleHeader.Size = new System.Drawing.Size(181, 15);
+            this.scheduleHeader.TabIndex = 25;
+            this.scheduleHeader.Text = "Источник программы передач:";
+            // 
+            // scheduleText
+            // 
+            this.scheduleText.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.scheduleText.Location = new System.Drawing.Point(10, 194);
+            this.scheduleText.MaxLength = 1000;
+            this.scheduleText.Name = "scheduleText";
+            this.scheduleText.Size = new System.Drawing.Size(427, 23);
+            this.scheduleText.TabIndex = 24;
+            // 
+            // scheduleCheckBox
+            // 
+            this.scheduleCheckBox.AutoSize = true;
+            this.scheduleCheckBox.Location = new System.Drawing.Point(10, 131);
+            this.scheduleCheckBox.Name = "scheduleCheckBox";
+            this.scheduleCheckBox.Size = new System.Drawing.Size(197, 19);
+            this.scheduleCheckBox.TabIndex = 26;
+            this.scheduleCheckBox.Text = "Загружать программу передач";
+            this.scheduleCheckBox.UseVisualStyleBackColor = true;
+            // 
             // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(483, 384);
+            this.ClientSize = new System.Drawing.Size(483, 568);
+            this.Controls.Add(this.scheduleCheckBox);
+            this.Controls.Add(this.scheduleHeader);
+            this.Controls.Add(this.scheduleText);
+            this.Controls.Add(this.settingsButton);
+            this.Controls.Add(this.vlcPathHeader);
+            this.Controls.Add(this.vlcPath);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.customParamsHeader);
             this.Controls.Add(this.timeoutLabel);
@@ -124,5 +201,12 @@
         private DataGridView dataGridView1;
         private DataGridViewTextBoxColumn headerColumn;
         private DataGridViewTextBoxColumn dataColumn;
+        private TextBox vlcPath;
+        private Label vlcPathHeader;
+        private Button settingsButton;
+        private OpenFileDialog openFileDialog1;
+        private Label scheduleHeader;
+        private TextBox scheduleText;
+        private CheckBox scheduleCheckBox;
     }
 }

@@ -47,6 +47,9 @@
             this.durationHeader = new System.Windows.Forms.Label();
             this.durationText = new System.Windows.Forms.TextBox();
             this.channelGroup = new System.Windows.Forms.GroupBox();
+            this.currentItemLabel = new System.Windows.Forms.Label();
+            this.scheduleButton = new System.Windows.Forms.Button();
+            this.playChannel = new System.Windows.Forms.Button();
             this.checkButton = new System.Windows.Forms.Button();
             this.reloadLogo = new System.Windows.Forms.Button();
             this.saveChannel = new System.Windows.Forms.Button();
@@ -60,6 +63,14 @@
             this.settingsButton = new System.Windows.Forms.Button();
             this.pasteButton = new System.Windows.Forms.Button();
             this.copyButton = new System.Windows.Forms.Button();
+            this.channelsCountHeader = new System.Windows.Forms.Label();
+            this.channelsCount = new System.Windows.Forms.Label();
+            this.searchHeader = new System.Windows.Forms.Label();
+            this.searchText = new System.Windows.Forms.TextBox();
+            this.searchCount = new System.Windows.Forms.Label();
+            this.nextSearchResult = new System.Windows.Forms.Button();
+            this.previousSearchResult = new System.Windows.Forms.Button();
+            this.loadingProgressBar = new System.Windows.Forms.ProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.logoPicture)).BeginInit();
             this.channelGroup.SuspendLayout();
             this.SuspendLayout();
@@ -84,10 +95,10 @@
             // 
             this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox1.Location = new System.Drawing.Point(24, 493);
+            this.textBox1.Location = new System.Drawing.Point(24, 578);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(749, 54);
+            this.textBox1.Size = new System.Drawing.Size(819, 44);
             this.textBox1.TabIndex = 1;
             // 
             // treeView1
@@ -99,13 +110,14 @@
             this.treeView1.LabelEdit = true;
             this.treeView1.Location = new System.Drawing.Point(24, 58);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(207, 389);
+            this.treeView1.Size = new System.Drawing.Size(207, 464);
             this.treeView1.TabIndex = 2;
             this.treeView1.Tag = "";
             this.treeView1.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.treeView1_AfterLabelEdit);
             this.treeView1.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.treeView1_ItemDrag);
             this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
             this.treeView1.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseClick);
+            this.treeView1.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView1_NodeMouseDoubleClick);
             this.treeView1.DragDrop += new System.Windows.Forms.DragEventHandler(this.treeView1_DragDrop);
             this.treeView1.DragEnter += new System.Windows.Forms.DragEventHandler(this.treeView1_DragEnter);
             this.treeView1.DragOver += new System.Windows.Forms.DragEventHandler(this.treeView1_DragOver);
@@ -126,7 +138,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.channelNameText.Location = new System.Drawing.Point(162, 43);
             this.channelNameText.Name = "channelNameText";
-            this.channelNameText.Size = new System.Drawing.Size(368, 23);
+            this.channelNameText.Size = new System.Drawing.Size(435, 23);
             this.channelNameText.TabIndex = 4;
             // 
             // logoLinkText
@@ -135,7 +147,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.logoLinkText.Location = new System.Drawing.Point(162, 93);
             this.logoLinkText.Name = "logoLinkText";
-            this.logoLinkText.Size = new System.Drawing.Size(338, 23);
+            this.logoLinkText.Size = new System.Drawing.Size(405, 23);
             this.logoLinkText.TabIndex = 5;
             // 
             // channelLinkText
@@ -144,7 +156,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.channelLinkText.Location = new System.Drawing.Point(162, 200);
             this.channelLinkText.Name = "channelLinkText";
-            this.channelLinkText.Size = new System.Drawing.Size(368, 23);
+            this.channelLinkText.Size = new System.Drawing.Size(405, 23);
             this.channelLinkText.TabIndex = 6;
             // 
             // logoHeader
@@ -160,9 +172,9 @@
             // 
             this.channelNameHeader.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.channelNameHeader.Location = new System.Drawing.Point(165, 17);
+            this.channelNameHeader.Location = new System.Drawing.Point(162, 17);
             this.channelNameHeader.Name = "channelNameHeader";
-            this.channelNameHeader.Size = new System.Drawing.Size(365, 23);
+            this.channelNameHeader.Size = new System.Drawing.Size(435, 23);
             this.channelNameHeader.TabIndex = 8;
             this.channelNameHeader.Text = "Название канала";
             this.channelNameHeader.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -173,7 +185,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.logoLinkHeader.Location = new System.Drawing.Point(162, 67);
             this.logoLinkHeader.Name = "logoLinkHeader";
-            this.logoLinkHeader.Size = new System.Drawing.Size(365, 23);
+            this.logoLinkHeader.Size = new System.Drawing.Size(435, 23);
             this.logoLinkHeader.TabIndex = 9;
             this.logoLinkHeader.Text = "Ссылка на логотип";
             this.logoLinkHeader.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -184,7 +196,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.channeLinkHeader.Location = new System.Drawing.Point(162, 174);
             this.channeLinkHeader.Name = "channeLinkHeader";
-            this.channeLinkHeader.Size = new System.Drawing.Size(368, 23);
+            this.channeLinkHeader.Size = new System.Drawing.Size(435, 23);
             this.channeLinkHeader.TabIndex = 10;
             this.channeLinkHeader.Text = "Ссылка на канал/трек";
             this.channeLinkHeader.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -195,7 +207,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupHeader.Location = new System.Drawing.Point(165, 117);
             this.groupHeader.Name = "groupHeader";
-            this.groupHeader.Size = new System.Drawing.Size(365, 23);
+            this.groupHeader.Size = new System.Drawing.Size(432, 23);
             this.groupHeader.TabIndex = 12;
             this.groupHeader.Text = "Категория";
             this.groupHeader.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -206,7 +218,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupText.Location = new System.Drawing.Point(162, 143);
             this.groupText.Name = "groupText";
-            this.groupText.Size = new System.Drawing.Size(368, 23);
+            this.groupText.Size = new System.Drawing.Size(435, 23);
             this.groupText.TabIndex = 11;
             // 
             // durationHeader
@@ -232,6 +244,9 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.channelGroup.AutoSize = true;
+            this.channelGroup.Controls.Add(this.currentItemLabel);
+            this.channelGroup.Controls.Add(this.scheduleButton);
+            this.channelGroup.Controls.Add(this.playChannel);
             this.channelGroup.Controls.Add(this.checkButton);
             this.channelGroup.Controls.Add(this.reloadLogo);
             this.channelGroup.Controls.Add(this.saveChannel);
@@ -249,11 +264,43 @@
             this.channelGroup.Controls.Add(this.logoLinkHeader);
             this.channelGroup.Location = new System.Drawing.Point(237, 58);
             this.channelGroup.Name = "channelGroup";
-            this.channelGroup.Size = new System.Drawing.Size(536, 389);
+            this.channelGroup.Size = new System.Drawing.Size(606, 464);
             this.channelGroup.TabIndex = 15;
             this.channelGroup.TabStop = false;
             this.channelGroup.Text = "Информация о канале";
             this.channelGroup.Visible = false;
+            // 
+            // currentItemLabel
+            // 
+            this.currentItemLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.currentItemLabel.Location = new System.Drawing.Point(0, 417);
+            this.currentItemLabel.Name = "currentItemLabel";
+            this.currentItemLabel.Size = new System.Drawing.Size(607, 23);
+            this.currentItemLabel.TabIndex = 31;
+            this.currentItemLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // scheduleButton
+            // 
+            this.scheduleButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.scheduleButton.Image = global::PlaylistEditor.Properties.Resources.ListTimePicker;
+            this.scheduleButton.Location = new System.Drawing.Point(573, 12);
+            this.scheduleButton.Name = "scheduleButton";
+            this.scheduleButton.Size = new System.Drawing.Size(24, 24);
+            this.scheduleButton.TabIndex = 30;
+            this.scheduleButton.UseVisualStyleBackColor = true;
+            this.scheduleButton.Click += new System.EventHandler(this.button1_Click_1);
+            // 
+            // playChannel
+            // 
+            this.playChannel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.playChannel.Image = global::PlaylistEditor.Properties.Resources.Play;
+            this.playChannel.Location = new System.Drawing.Point(573, 199);
+            this.playChannel.Name = "playChannel";
+            this.playChannel.Size = new System.Drawing.Size(24, 23);
+            this.playChannel.TabIndex = 18;
+            this.playChannel.UseVisualStyleBackColor = true;
+            this.playChannel.Click += new System.EventHandler(this.playChannel_Click);
             // 
             // checkButton
             // 
@@ -269,7 +316,7 @@
             // 
             this.reloadLogo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.reloadLogo.Image = ((System.Drawing.Image)(resources.GetObject("reloadLogo.Image")));
-            this.reloadLogo.Location = new System.Drawing.Point(506, 91);
+            this.reloadLogo.Location = new System.Drawing.Point(573, 92);
             this.reloadLogo.Name = "reloadLogo";
             this.reloadLogo.Size = new System.Drawing.Size(24, 23);
             this.reloadLogo.TabIndex = 16;
@@ -280,7 +327,7 @@
             // 
             this.saveChannel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.saveChannel.Enabled = false;
-            this.saveChannel.Location = new System.Drawing.Point(353, 240);
+            this.saveChannel.Location = new System.Drawing.Point(423, 240);
             this.saveChannel.Name = "saveChannel";
             this.saveChannel.Size = new System.Drawing.Size(174, 23);
             this.saveChannel.TabIndex = 15;
@@ -330,7 +377,7 @@
             // 
             this.checkAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkAllButton.Image = global::PlaylistEditor.Properties.Resources.DownloadDocument;
-            this.checkAllButton.Location = new System.Drawing.Point(720, 28);
+            this.checkAllButton.Location = new System.Drawing.Point(790, 28);
             this.checkAllButton.Name = "checkAllButton";
             this.checkAllButton.Size = new System.Drawing.Size(24, 24);
             this.checkAllButton.TabIndex = 19;
@@ -341,7 +388,7 @@
             // 
             this.stopCheckingButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.stopCheckingButton.Image = global::PlaylistEditor.Properties.Resources.StopOutline;
-            this.stopCheckingButton.Location = new System.Drawing.Point(690, 28);
+            this.stopCheckingButton.Location = new System.Drawing.Point(760, 28);
             this.stopCheckingButton.Name = "stopCheckingButton";
             this.stopCheckingButton.Size = new System.Drawing.Size(24, 24);
             this.stopCheckingButton.TabIndex = 21;
@@ -352,7 +399,7 @@
             // 
             this.settingsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.settingsButton.Image = global::PlaylistEditor.Properties.Resources.Settings;
-            this.settingsButton.Location = new System.Drawing.Point(750, 28);
+            this.settingsButton.Location = new System.Drawing.Point(820, 28);
             this.settingsButton.Name = "settingsButton";
             this.settingsButton.Size = new System.Drawing.Size(24, 24);
             this.settingsButton.TabIndex = 22;
@@ -380,11 +427,101 @@
             this.copyButton.UseVisualStyleBackColor = true;
             this.copyButton.Click += new System.EventHandler(this.copyButton_Click);
             // 
+            // channelsCountHeader
+            // 
+            this.channelsCountHeader.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.channelsCountHeader.Location = new System.Drawing.Point(24, 528);
+            this.channelsCountHeader.Name = "channelsCountHeader";
+            this.channelsCountHeader.Size = new System.Drawing.Size(195, 15);
+            this.channelsCountHeader.TabIndex = 18;
+            this.channelsCountHeader.Text = "Каналов в выбранном элементе: ";
+            this.channelsCountHeader.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.channelsCountHeader.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // channelsCount
+            // 
+            this.channelsCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.channelsCount.Location = new System.Drawing.Point(216, 525);
+            this.channelsCount.Name = "channelsCount";
+            this.channelsCount.Size = new System.Drawing.Size(65, 15);
+            this.channelsCount.TabIndex = 25;
+            this.channelsCount.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // searchHeader
+            // 
+            this.searchHeader.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.searchHeader.Location = new System.Drawing.Point(584, 528);
+            this.searchHeader.Name = "searchHeader";
+            this.searchHeader.Size = new System.Drawing.Size(45, 15);
+            this.searchHeader.TabIndex = 26;
+            this.searchHeader.Text = "Поиск:";
+            this.searchHeader.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // searchText
+            // 
+            this.searchText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.searchText.Location = new System.Drawing.Point(635, 525);
+            this.searchText.MaxLength = 20;
+            this.searchText.Name = "searchText";
+            this.searchText.Size = new System.Drawing.Size(147, 23);
+            this.searchText.TabIndex = 18;
+            this.searchText.TextChanged += new System.EventHandler(this.searchText_TextChanged);
+            // 
+            // searchCount
+            // 
+            this.searchCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.searchCount.Location = new System.Drawing.Point(655, 551);
+            this.searchCount.Name = "searchCount";
+            this.searchCount.Size = new System.Drawing.Size(188, 15);
+            this.searchCount.TabIndex = 27;
+            this.searchCount.Text = "Найдено:";
+            this.searchCount.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // nextSearchResult
+            // 
+            this.nextSearchResult.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.nextSearchResult.Image = global::PlaylistEditor.Properties.Resources.NextFrame;
+            this.nextSearchResult.Location = new System.Drawing.Point(819, 525);
+            this.nextSearchResult.Name = "nextSearchResult";
+            this.nextSearchResult.Size = new System.Drawing.Size(24, 24);
+            this.nextSearchResult.TabIndex = 28;
+            this.nextSearchResult.UseVisualStyleBackColor = true;
+            this.nextSearchResult.Click += new System.EventHandler(this.nextSearchResult_Click);
+            // 
+            // previousSearchResult
+            // 
+            this.previousSearchResult.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.previousSearchResult.Image = global::PlaylistEditor.Properties.Resources.PreviousFrame;
+            this.previousSearchResult.Location = new System.Drawing.Point(790, 525);
+            this.previousSearchResult.Name = "previousSearchResult";
+            this.previousSearchResult.Size = new System.Drawing.Size(24, 24);
+            this.previousSearchResult.TabIndex = 29;
+            this.previousSearchResult.UseVisualStyleBackColor = true;
+            this.previousSearchResult.Click += new System.EventHandler(this.previousSearchResult_Click);
+            // 
+            // loadingProgressBar
+            // 
+            this.loadingProgressBar.Enabled = false;
+            this.loadingProgressBar.Location = new System.Drawing.Point(304, 525);
+            this.loadingProgressBar.Name = "loadingProgressBar";
+            this.loadingProgressBar.Size = new System.Drawing.Size(226, 23);
+            this.loadingProgressBar.Step = 1;
+            this.loadingProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.loadingProgressBar.TabIndex = 30;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(786, 559);
+            this.ClientSize = new System.Drawing.Size(856, 634);
+            this.Controls.Add(this.loadingProgressBar);
+            this.Controls.Add(this.previousSearchResult);
+            this.Controls.Add(this.nextSearchResult);
+            this.Controls.Add(this.searchCount);
+            this.Controls.Add(this.searchText);
+            this.Controls.Add(this.searchHeader);
+            this.Controls.Add(this.channelsCount);
+            this.Controls.Add(this.channelsCountHeader);
             this.Controls.Add(this.copyButton);
             this.Controls.Add(this.pasteButton);
             this.Controls.Add(this.settingsButton);
@@ -441,5 +578,16 @@
         private Button settingsButton;
         private Button pasteButton;
         private Button copyButton;
+        private Label channelsCountHeader;
+        private Label channelsCount;
+        private Label searchHeader;
+        private TextBox searchText;
+        private Label searchCount;
+        private Button nextSearchResult;
+        private Button previousSearchResult;
+        private Button playChannel;
+        private Button scheduleButton;
+        private Label currentItemLabel;
+        private ProgressBar loadingProgressBar;
     }
 }

@@ -13,6 +13,7 @@ namespace PlaylistEditor
         internal static readonly HttpClient client = new HttpClient();
         private static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(maxTasks, maxTasks); // семафор для ограничения числа одновременных потоков с запросами
         private static bool processStatus;
+        internal static Form1 main;
 
         // пытаемся получить картику по адресу 
         internal static async Task<Image?> LoadImage(string logoLink)
@@ -111,8 +112,9 @@ namespace PlaylistEditor
                 if (markChecked)
                 {
                     node = TreeManager.GetNode(coords);
-                    node.BackColor = Color.DarkGray;
-                    node.ForeColor = Color.White;
+                    main.BeginInvoke(new Action (() => main.MarkNode(node, Form1.NodeStatus.InProgress)));
+                     //node.BackColor = Color.DarkGray;
+                    //node.ForeColor = Color.White;
                 }
 
                 Channel? channel = (Channel)PlaylistManager.GetInstance().GetObject(coords);
@@ -142,18 +144,19 @@ namespace PlaylistEditor
                 if (ex is TaskCanceledException || ex is OperationCanceledException)
                 {
                     if (node != null)
-                        node.BackColor = Color.ForestGreen;
+                        main.BeginInvoke(new Action(() => main.MarkNode(node, Form1.NodeStatus.PartialyAvailable)));
                     semaphoreSlim.Release();
                     return "Канал условно доступен";
                 }
                 // если запрос неудачен, считаем, что канала недоступен
                 if (node != null)
-                    node.BackColor = Color.DarkRed;
+                    main.BeginInvoke(new Action(() => main.MarkNode(node, Form1.NodeStatus.NotAvailable)));
                 semaphoreSlim.Release();
+                //return ex.Message;
                 return "Канал НЕдоступен";
             }
             if (node != null)
-                node.BackColor = Color.DarkGreen;
+                main.BeginInvoke(new Action(() => main.MarkNode(node, Form1.NodeStatus.Available)));
             semaphoreSlim.Release();
             return "Канал доступен";
             

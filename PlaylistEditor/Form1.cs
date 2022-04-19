@@ -1,5 +1,7 @@
 using System.Net;
-
+using PlaylistEditor.Schedule;
+using PlaylistEditor.VideoPlayers;
+using PlaylistEditor.Search;
 
 namespace PlaylistEditor
 {
@@ -31,7 +33,18 @@ namespace PlaylistEditor
 
         internal static Form1 instance;
         internal TreeView MainTree { get { return treeView1; }}
-        
+
+        ISearcher searcher;
+        string previousSearchText = "";
+        ScheduleManager scheduleManager;
+
+        internal enum NodeStatus
+        {
+            InProgress = 1,
+            Available,
+            PartialyAvailable,
+            NotAvailable
+        };
 
         public Form1()
         {
@@ -42,14 +55,17 @@ namespace PlaylistEditor
             //добавляем обработчики событий нажатий на плейлист, канал или группу
             OnPlaylistClick += VisualizePlaylist;
             OnGroupClick += VisualizeGroup;
-            OnChannelClick += VisualizeChannel;
+            
             playlistManager.OnError += ShowErrorMessage;
+            searcher = new BaseSearcher();
         }
 
         //вывод сообщений об ошибках
         void ShowErrorMessage(string message)
         {
-            textBox1.Text += $"{message} \n";
+            if (message == "")
+                return;
+            textBox1.Text += $"{DateTime.Now.ToString("T")}: {message}\r\n";
         }
 
         public void ShowErrorWindow(string message)
@@ -60,7 +76,7 @@ namespace PlaylistEditor
         }
 
         
-        private void Form1_Load(object sender, EventArgs e)
+        private async void Form1_Load(object sender, EventArgs e)
         {
             instance = this;
             // добавляем обработчик события нажатия кнопки для каждого текстового поля группы сведений о канале, чтобы активировать кнопку сохранения
@@ -81,11 +97,44 @@ namespace PlaylistEditor
             toolTip1.SetToolTip(this.stopCheckingButton, "Остановить текущую проверку");
             toolTip1.SetToolTip(this.copyButton, "Копировать элемент");
             toolTip1.SetToolTip(this.pasteButton, "Вставить элемент");
+            toolTip1.SetToolTip(this.nextSearchResult, "Следующий результат");
+            toolTip1.SetToolTip(this.previousSearchResult, "Предыдущий результат");
+            toolTip1.SetToolTip(this.scheduleButton, "Показать расписание");
             // считываем конфигурацию и создаем строки под нестандартные параметры
-            Configurator.mainForm = this;
             Configurator.ReadConfig();
             CustomValuesUI();
-            
+            // получаем иконки
+            treeView1.ImageList = Icons.GetIconsList();
+            WebManager.main = this;
+            // проверяем состояние архива программы передач
+            scheduleManager = new ScheduleManager(ShowErrorMessage);
+            await LoadScheduleArchive();
+        }
+
+        internal async Task LoadScheduleArchive()
+        {
+            if (!Configurator.currentConfig.loadSchedule)
+                return;
+
+            loadingProgressBar.Value = 0;
+            ShowErrorMessage("Проверка архива программы передач");
+            string status = await scheduleManager.ScheduleCheck();
+            loadingProgressBar.Value = loadingProgressBar.Maximum;
+            ShowErrorMessage(status);
+            new Task(HideProgressBar).Start();
+        }
+
+        public void ProgressUpdate()
+        {
+            if (!loadingProgressBar.Enabled)
+                loadingProgressBar.Enabled = true;
+            loadingProgressBar.PerformStep();
+        }
+
+        void HideProgressBar()
+        {
+            Thread.Sleep(2000);
+            loadingProgressBar.Enabled = false;
         }
 
         private async void OpenListButton_Click(object sender, EventArgs e)
@@ -128,14 +177,17 @@ namespace PlaylistEditor
         //удаляем дерево старого плейлиста и создаем узел плейлиста
         public void AddPlaylist(string name)
         {
-            treeView1.Nodes.Add(name);
+            TreeNode playlistNode = new TreeNode(name);
+            playlistNode.ImageIndex = playlistNode.SelectedImageIndex = 5;
+            treeView1.Nodes.Add(playlistNode);
         }
 
         //генерация узла существующей группы
         public void AddGroup(string name)
         {
-            // playlistManager.currentPlaylist?.FindGroup("", true);
-            treeView1.Nodes[playlistManager.CurrentPlaylistIndex].Nodes.Add(name);
+            TreeNode groupNode = new TreeNode(name);
+            groupNode.ImageIndex = groupNode.SelectedImageIndex = 6;
+            treeView1.Nodes[playlistManager.CurrentPlaylistIndex].Nodes.Add(groupNode);
         }
 
         //генерация узла существующего канала для указанной группы
@@ -145,9 +197,9 @@ namespace PlaylistEditor
         }
 
         // визуализация узла канала
-        async public void VisualizeChannel(int groupIndex, int channelIndex)
+        async public Task VisualizeChannel(int groupIndex, int channelIndex)
         {
-
+            channelsCount.Text = "";
             //делаем неактивной кнопку сохранения изменений
             saveChannel.Enabled = false;
             //отображаем группу интерфейсных элементов, хранящих информацию о канале
@@ -170,10 +222,19 @@ namespace PlaylistEditor
             {
                 customValuesText[i].Text = currentChannel.customData[i];
             }
-            //пытаемся загрузить изображение по ссылке
+            //пытаемся загрузить изображение по ссылке и расписание в разных потоках
+            var logoTask = LoadImage(currentChannel.LogoPath);
+            var scheduleTask = LoadSchedule(currentChannel.Name);
+            await logoTask;
+            await scheduleTask;
+            
+        }
+
+        async Task LoadImage(string logoPath)
+        {
             try
             {
-               logoPicture.Image = await Task.Run(() => WebManager.LoadImage(currentChannel.LogoPath));
+                logoPicture.Image = await Task.Run(() => WebManager.LoadImage(logoPath));
             }
             catch (Exception)
             {
@@ -182,14 +243,33 @@ namespace PlaylistEditor
             }
         }
 
+        async Task LoadSchedule(string channelName)
+        {
+            string msg = "";
+            msg = await scheduleManager.LoadChannelSchedule(channelName);
+            ShowErrorMessage(msg);
+            // и находящийся в данный момент в эфире элемент
+            ScheduleManager.ScheduleItem? curItem = scheduleManager.GetCurrentItem();
+            if (curItem == null)
+                currentItemLabel.Text = "";
+            else currentItemLabel.Text = $"Сейчас в эфире: {curItem?.Name}";
+        }
+
         public void VisualizeGroup(int groupIndex)
         {
             channelGroup.Visible = false;
+            channelsCount.Text = treeView1.SelectedNode.Nodes.Count.ToString();
         }
 
         public void VisualizePlaylist()
         {
             channelGroup.Visible = false;
+            int totalCount = 0;
+            foreach (TreeNode item in treeView1.SelectedNode.Nodes)
+            {
+                totalCount += item.Nodes.Count;
+            }
+            channelsCount.Text = totalCount.ToString();
         }
 
         private void TextChangedChecker(object sender, EventArgs e)
@@ -203,7 +283,7 @@ namespace PlaylistEditor
         }
 
         // отображаем информацию по каналу при нажатии на его узел в дереве
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        private async void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (dragTime)
                 return;
@@ -213,7 +293,7 @@ namespace PlaylistEditor
             {
                 case 0: playlistManager.CurrentPlaylistIndex = e.Node.Index; OnPlaylistClick?.Invoke(); break;
                 case 1: playlistManager.CurrentPlaylistIndex = e.Node.Parent.Index; OnGroupClick?.Invoke(e.Node.Index); break;
-                case 2: playlistManager.CurrentPlaylistIndex = e.Node.Parent.Parent.Index; OnChannelClick?.Invoke(e.Node.Parent.Index, e.Node.Index); break;
+                case 2: playlistManager.CurrentPlaylistIndex = e.Node.Parent.Parent.Index; await VisualizeChannel(e.Node.Parent.Index, e.Node.Index); break;
                 default: break;
             }
                        
@@ -383,7 +463,8 @@ namespace PlaylistEditor
         */
         private void treeView1_DragDrop(object sender, DragEventArgs e)
         {
-             // получаем координаты узла, над которым находится мышь
+            dragTime = false;
+            // получаем координаты узла, над которым находится мышь
             Point targetPoint = treeView1.PointToClient(new Point(e.X, e.Y));
 
             // получаем узел в точке дропа
@@ -398,7 +479,6 @@ namespace PlaylistEditor
             // убеждаемся, что перетаскиваемый и выбранный узел - не одно и то же
             if (!draggedNode.Equals(targetNode) && e.Effect == DragDropEffects.Move)
             {
-                dragTime = false;
                 string success = TreeManager.PasteNode(ref draggedNode, ref targetNode, true);
             }
         }
@@ -479,9 +559,9 @@ namespace PlaylistEditor
             NewElement();
         }
 
-        private void saveButton_Click(object sender, EventArgs e)
+        private async void saveButton_Click(object sender, EventArgs e)
         {
-            SavePlaylist();
+            await SavePlaylist();
         }
 
 
@@ -633,6 +713,90 @@ namespace PlaylistEditor
 
             TreeNode seleceted = treeView1.SelectedNode;
             TreeManager.PasteNode(ref bufferNode, ref seleceted, false);
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void searchText_TextChanged(object sender, EventArgs e)
+        {
+            
+            // получаем изначальную область поиска - или выделенный узел,
+            // или все дерево, если ничего не выделено или выделен узел последнего уровня
+            TreeNode? selected = treeView1.SelectedNode;
+            TreeNodeCollection selectedCollection;
+            if (selected == null || selected.Level == 2)
+                selectedCollection = treeView1.Nodes;
+            else selectedCollection = selected.Nodes;
+
+            // получаем в поисковике список конечных элементов
+            await searcher.InitializeSearch(selectedCollection);
+            // и отбираем нужные
+            int searched;
+            searched = await searcher.Search(searchText.Text);
+            // меняем текст под строкой поиска, чтобы указать число найденных элементов
+            searchCount.Text = $"Найдено: 0/{searched}";
+            previousSearchText = searched.ToString();
+        }
+
+        private void nextSearchResult_Click(object sender, EventArgs e)
+        {
+            TreeNode? result = searcher.Next;
+            ShowSearchResult(result);
+        }
+
+        private void previousSearchResult_Click(object sender, EventArgs e)
+        {
+            TreeNode? result = searcher.Previous;
+            ShowSearchResult(result);
+        }
+
+        private void ShowSearchResult(TreeNode? result)
+        {
+            if (result == null)
+                return;
+
+            treeView1.SelectedNode = result;
+            searchCount.Text = $"Найдено: {searcher.CurrentIndex}/{previousSearchText}";
+        }
+
+        // устанавливает изображение для узла в зависимости от его доступности
+        internal void MarkNode(TreeNode node, NodeStatus status)
+        {
+            node.ImageIndex = node.SelectedImageIndex = (int)status;
+        }
+
+        private void playChannel_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                VLCModule.PlayChannel(channelLinkText.Text);
+            }
+            catch (Exception ex)
+            {
+                ShowErrorWindow(ex.Message);
+            }
+        }
+
+        private void treeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            try
+            {
+                ShowErrorMessage($"|{System.Convert.ToByte(channelLinkText.Text[^1])}|");
+                VLCModule.PlayChannel(channelLinkText.Text);
+            }
+            catch (Exception ex)
+            {
+                ShowErrorWindow(ex.Message);
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            ScheduleList scheduleList = new ScheduleList(this, scheduleManager);
+            scheduleList.Show();
         }
     }
 
